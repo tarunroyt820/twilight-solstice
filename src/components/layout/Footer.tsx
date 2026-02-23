@@ -1,5 +1,5 @@
 import { Github, Linkedin, Twitter, Sparkles } from "lucide-react";
-import logo from "@/assets/images/nextaro-logo.png";
+import { Logo } from "@/components/common/Logo";
 
 const footerLinks = {
   product: [
@@ -43,7 +43,7 @@ export function Footer() {
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4 group cursor-pointer">
                 <div className="relative">
-                  <img src={logo} alt="Nextaro Logo" className="h-16 md:h-20 w-auto object-contain transition-transform duration-500 group-hover:scale-110" />
+                  <Logo size="lg" className="transition-transform duration-500 group-hover:scale-110" />
                   <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div className="flex flex-col">

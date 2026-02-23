@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import logo from "@/assets/images/nextaro-logo.png";
+import { Logo } from "@/components/common/Logo";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,11 +22,7 @@ export function Navbar() {
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-4 group">
             <div className="relative">
-              <img
-                src={logo}
-                alt="Nextaro Logo"
-                className="h-16 md:h-24 w-auto object-contain transition-all duration-500 group-hover:scale-105 group-hover:drop-shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]"
-              />
+              <Logo size="sm" />
               <div className="absolute -inset-4 bg-primary/20 blur-[32px] rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </div>
             <div className="hidden lg:flex flex-col">

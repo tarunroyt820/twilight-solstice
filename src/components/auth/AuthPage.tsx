@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { login, signup } from "@/services/authApi";
 import { toast } from "sonner";
-import logo from "@/assets/images/nextaro-logo.png";
+import { Logo } from "@/components/common/Logo";
 import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedCounter } from "@/components/common/AnimatedCounter";
 
@@ -79,7 +79,7 @@ export function AuthPage({ mode }: AuthPageProps) {
           {/* Brand Header */}
           <div className="flex items-center gap-3">
             <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100">
-              <img src={logo} alt="Nextaro" className="h-8 w-8 object-contain" />
+              <Logo size="md" />
             </div>
             <span className="text-xl font-bold tracking-tight text-slate-900">Nextaro</span>
           </div>

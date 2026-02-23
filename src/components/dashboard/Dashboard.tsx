@@ -20,7 +20,7 @@ import { SkillExchangeShell } from "./SkillExchangeShell";
 import { AIAssistantShell } from "./AIAssistantShell";
 import { SettingsShell } from "./SettingsShell";
 import Profile from "./Profile";
-import logo from "@/assets/images/nextaro-logo.png";
+import { Logo } from "@/components/common/Logo";
 import { getProfile } from "@/services/profileApi";
 import { UserProfile } from "@/types/profile";
 import { logout } from "@/services/authApi";
@@ -84,9 +84,7 @@ export function Dashboard() {
       {/* Sidebar - Desktop */}
       <aside className="hidden w-72 flex-col border-r border-border/40 bg-card/50 backdrop-blur-xl lg:flex sticky top-0 h-screen">
         <div className="flex h-32 items-center px-8">
-          <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="Nextaro Logo" className="h-24 w-auto object-contain" />
-          </Link>
+          <Logo size="lg" />
         </div>
 
         <div className="flex flex-1 flex-col justify-between p-6">
@@ -133,9 +131,7 @@ export function Dashboard() {
           }`}
       >
         <div className="flex h-32 items-center justify-between px-8 border-b border-border/40">
-          <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="Nextaro Logo" className="h-20 w-auto object-contain" />
-          </Link>
+          <Logo size="lg" />
           <button
             onClick={() => setSidebarOpen(false)}
             className="rounded-xl p-2 text-muted-foreground hover:bg-muted"
