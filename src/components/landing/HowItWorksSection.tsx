@@ -33,10 +33,11 @@ const steps = [
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden bg-background">
-      {/* Decorative gradients */}
-      <div className="absolute top-0 left-1/4 w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
-      <div className="absolute bottom-0 right-1/4 w-[30%] h-[30%] bg-accent/5 rounded-full blur-[100px]" />
+    <section id="how-it-works" className="relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden landing-neon-base landing-neon-subtle">
+      <div className="landing-neon-layer landing-neon-float" />
+      <div className="landing-neon-blob3 landing-neon-float" />
+      <div className="landing-neon-streak" />
+      <div className="landing-neon-grain" />
 
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
@@ -45,11 +46,11 @@ export function HowItWorksSection() {
             <Sparkles className="h-3 w-3" />
             Operational Protocol
           </div>
-          <h2 className="text-5xl md:text-7xl font-black tracking-tight leading-[0.9] text-foreground">
+          <h2 className="landing-neon-heading text-5xl md:text-7xl font-black tracking-tight leading-[0.9]">
             Automate Your <br />
             <span className="text-gradient">Evolution.</span>
           </h2>
-          <p className="max-w-2xl text-lg md:text-xl font-medium text-muted-foreground leading-relaxed">
+          <p className="landing-neon-body max-w-2xl text-lg md:text-xl font-medium leading-relaxed">
             The Nextaro protocol is engineered for velocity and precision. <br className="hidden md:block" />
             No friction. No filler. Just your architectural future.
           </p>

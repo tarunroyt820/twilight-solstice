@@ -49,10 +49,11 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden bg-background">
-      {/* Precision grid pattern */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`, backgroundSize: '40px 40px' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.08)_0%,transparent_70%)]" />
+    <section id="features" className="relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden landing-neon-base landing-neon-medium">
+      <div className="landing-neon-layer landing-neon-float" />
+      <div className="landing-neon-blob3 landing-neon-float" />
+      <div className="landing-neon-streak" />
+      <div className="landing-neon-grain" />
 
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
@@ -62,11 +63,11 @@ export function FeaturesSection() {
               <Zap className="h-3 w-3" />
               Core Capabilities
             </div>
-            <h2 className="text-5xl md:text-7xl font-black tracking-tight leading-[0.9] text-foreground">
+            <h2 className="landing-neon-heading text-5xl md:text-7xl font-black tracking-tight leading-[0.9]">
               Supercharge your <br />
               <span className="text-gradient">Professional Engine.</span>
             </h2>
-            <p className="text-lg md:text-xl font-medium text-muted-foreground leading-relaxed">
+            <p className="landing-neon-body text-lg md:text-xl font-medium leading-relaxed">
               Nextaro isn't a simple dashboard—it's a high-precision neural command center <br className="hidden md:block" /> for your entire global career trajectory.
             </p>
           </div>

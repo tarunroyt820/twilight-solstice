@@ -24,6 +24,28 @@
     --input: oklch(0.97 0.005 250);
     --ring: oklch(0.55 0.22 260);
     --radius: 1.25rem;
+    /* Aurora Mesh Tokens */
+    --aurora-base: 248 250 255;    /* #F8FAFF */
+    --aurora-indigo: 99 102 241;   /* #6366F1 */
+    --aurora-violet: 139 92 246;   /* #8B5CF6 */
+    --aurora-teal: 20 184 166;     /* #14B8A6 */
+    
+    /* Option B Futuristic Tokens */
+    --aurora-base: 11 16 32;      /* #0B1020 */
+    --aurora-cyan: 14 165 233;    /* #0EA5E9 */
+    --aurora-magenta: 168 85 247; /* #A855F7 */
+    --aurora-pink: 244 63 94;     /* #F43F5E */
+    --landing-text: 236 245 255;  /* high contrast text */
+    --landing-muted: 167 186 214; /* readable muted text */
+
+    /* Neon Noir Tokens */
+    --neon-base: 9 11 20;         /* #090B14 */
+    --neon-cyan: 0 229 255;       /* #00E5FF */
+    --neon-violet: 192 38 255;    /* #C026FF */
+    --neon-pink: 255 61 129;      /* #FF3D81 */
+    --neon-mint: 124 255 178;     /* #7CFFB2 */
+    --neon-heading: 244 248 255;  /* #F4F8FF */
+    --neon-body: 200 210 232;     /* #C8D2E8 */
   }
 
   .dark {
@@ -46,6 +68,29 @@
     --border: oklch(0.25 0.02 250);
     --input: oklch(0.22 0.02 250);
     --ring: oklch(0.65 0.2 260);
+
+    /* Aurora Mesh Tokens - Dark mode */
+    --aurora-base: 14 18 34;
+    --aurora-indigo: 99 102 241;
+    --aurora-violet: 139 92 246;
+    --aurora-teal: 20 184 166;
+    
+    /* Option B Futuristic Tokens */
+    --aurora-base: 11 16 32;
+    --aurora-cyan: 14 165 233;
+    --aurora-magenta: 168 85 247;
+    --aurora-pink: 244 63 94;
+    --landing-text: 236 245 255;
+    --landing-muted: 167 186 214;
+
+    /* Neon Noir Tokens */
+    --neon-base: 9 11 20;
+    --neon-cyan: 0 229 255;
+    --neon-violet: 192 38 255;
+    --neon-pink: 255 61 129;
+    --neon-mint: 124 255 178;
+    --neon-heading: 244 248 255;
+    --neon-body: 200 210 232;
   }
 }
 
@@ -104,8 +149,389 @@
     @apply bg-gradient-to-r from-orange-500 to-vibrant-purple text-white;
   }
 
-  .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-vibrant-blue to-vibrant-purple;
+  /* Aurora Utilities */
+  .landing-aurora-base {
+    background-color: rgb(var(--aurora-base));
+    position: relative;
+    isolation: isolate;
+  }
+
+  .landing-aurora-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .landing-aurora-layer::before,
+  .landing-aurora-layer::after {
+    content: "";
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(72px);
+  }
+
+  .landing-aurora-layer::before {
+    width: min(70vw, 46rem);
+    height: min(70vw, 46rem);
+    left: -12%;
+    top: -18%;
+    background: radial-gradient(
+      circle at center,
+      rgba(var(--aurora-indigo), 0.24) 0%,
+      rgba(var(--aurora-indigo), 0.08) 35%,
+      rgba(var(--aurora-indigo), 0) 70%
+    );
+  }
+
+  .landing-aurora-layer::after {
+    width: min(65vw, 40rem);
+    height: min(65vw, 40rem);
+    right: -10%;
+    top: 8%;
+    background: radial-gradient(
+      circle at center,
+      rgba(var(--aurora-violet), 0.22) 0%,
+      rgba(var(--aurora-violet), 0.07) 35%,
+      rgba(var(--aurora-violet), 0) 70%
+    );
+  }
+
+  .landing-aurora-teal {
+    position: absolute;
+    width: min(60vw, 36rem);
+    height: min(60vw, 36rem);
+    left: 26%;
+    bottom: -24%;
+    border-radius: 9999px;
+    filter: blur(72px);
+    background: radial-gradient(
+      circle at center,
+      rgba(var(--aurora-teal), 0.18) 0%,
+      rgba(var(--aurora-teal), 0.06) 35%,
+      rgba(var(--aurora-teal), 0) 70%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .landing-grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.08;
+    mix-blend-mode: soft-light;
+    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  }
+
+  /* intensity variants */
+  .landing-aurora-high .landing-aurora-layer::before,
+  .landing-aurora-high .landing-aurora-layer::after,
+  .landing-aurora-high .landing-aurora-teal {
+    opacity: 1;
+  }
+
+  .landing-aurora-medium .landing-aurora-layer::before,
+  .landing-aurora-medium .landing-aurora-layer::after,
+  .landing-aurora-medium .landing-aurora-teal {
+    opacity: 0.68;
+  }
+
+  .landing-aurora-subtle .landing-aurora-layer::before,
+  .landing-aurora-subtle .landing-aurora-layer::after,
+  .landing-aurora-subtle .landing-aurora-teal {
+    opacity: 0.45;
+  }
+
+  /* Aurora Animation */
+  @keyframes auroraFloat {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(2%, -2%, 0) scale(1.03);
+    }
+    100% {
+      transform: translate3d(-2%, 1%, 0) scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .landing-aurora-float {
+      animation: auroraFloat 22s ease-in-out infinite alternate;
+    }
+  }
+
+  /* ============================================
+     OPTION B FUTURISTIC LANDING BACKGROUND
+     ============================================ */
+  
+  .landing-future-base {
+    background-color: rgb(var(--aurora-base));
+    color: rgb(var(--landing-text));
+    position: relative;
+    isolation: isolate;
+  }
+
+  .landing-future-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .landing-future-layer::before,
+  .landing-future-layer::after {
+    content: "";
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(78px);
+  }
+
+  .landing-future-layer::before {
+    width: min(72vw, 48rem);
+    height: min(72vw, 48rem);
+    left: -15%;
+    top: -20%;
+    background: radial-gradient(
+      circle at center,
+      rgba(var(--aurora-cyan), 0.30) 0%,
+      rgba(var(--aurora-cyan), 0.10) 35%,
+      rgba(var(--aurora-cyan), 0) 72%
+    );
+  }
+
+  .landing-future-layer::after {
+    width: min(66vw, 42rem);
+    height: min(66vw, 42rem);
+    right: -12%;
+    top: 10%;
+    background: radial-gradient(
+      circle at center,
+      rgba(var(--aurora-magenta), 0.28) 0%,
+      rgba(var(--aurora-magenta), 0.09) 35%,
+      rgba(var(--aurora-magenta), 0) 72%
+    );
+  }
+
+  .landing-future-blob3 {
+    position: absolute;
+    width: min(60vw, 38rem);
+    height: min(60vw, 38rem);
+    left: 28%;
+    bottom: -24%;
+    border-radius: 9999px;
+    filter: blur(78px);
+    background: radial-gradient(
+      circle at center,
+      rgba(var(--aurora-pink), 0.24) 0%,
+      rgba(var(--aurora-pink), 0.07) 35%,
+      rgba(var(--aurora-pink), 0) 72%
+    );
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .landing-future-noise {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.09;
+    mix-blend-mode: soft-light;
+    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  }
+
+  /* intensity controls */
+  .landing-future-high .landing-future-layer::before,
+  .landing-future-high .landing-future-layer::after,
+  .landing-future-high .landing-future-blob3 { 
+    opacity: 1; 
+  }
+
+  .landing-future-medium .landing-future-layer::before,
+  .landing-future-medium .landing-future-layer::after,
+  .landing-future-medium .landing-future-blob3 { 
+    opacity: 0.68; 
+  }
+
+  .landing-future-subtle .landing-future-layer::before,
+  .landing-future-subtle .landing-future-layer::after,
+  .landing-future-subtle .landing-future-blob3 { 
+    opacity: 0.45; 
+  }
+
+  /* readability helpers */
+  .landing-future-text { 
+    color: rgb(var(--landing-text)); 
+  }
+  
+  .landing-future-muted { 
+    color: rgb(var(--landing-muted)); 
+  }
+
+  /* subtle animated drift */
+  @keyframes futureAuroraDrift {
+    0%   { transform: translate3d(0, 0, 0) scale(1); }
+    50%  { transform: translate3d(2%, -2%, 0) scale(1.03); }
+    100% { transform: translate3d(-2%, 1%, 0) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .landing-future-float {
+      animation: futureAuroraDrift 24s ease-in-out infinite alternate;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-future-float {
+      animation: none !important;
+    }
+  }
+
+  /* Neon Noir Landing Utilities */
+  .landing-neon-base {
+    position: relative;
+    isolation: isolate;
+    background-color: rgb(var(--neon-base));
+    color: rgb(var(--neon-heading));
+  }
+
+  .landing-neon-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .landing-neon-layer::before,
+  .landing-neon-layer::after {
+    content: "";
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(90px);
+  }
+
+  .landing-neon-layer::before {
+    width: min(72vw, 48rem);
+    height: min(72vw, 48rem);
+    left: -12%;
+    top: -18%;
+    background: radial-gradient(
+      circle at center,
+      rgba(var(--neon-cyan), 0.28) 0%,
+      rgba(var(--neon-cyan), 0.08) 35%,
+      rgba(var(--neon-cyan), 0) 72%
+    );
+  }
+
+  .landing-neon-layer::after {
+    width: min(66vw, 42rem);
+    height: min(66vw, 42rem);
+    right: -12%;
+    top: 6%;
+    background: radial-gradient(
+      circle at center,
+      rgba(var(--neon-violet), 0.30) 0%,
+      rgba(var(--neon-violet), 0.10) 35%,
+      rgba(var(--neon-violet), 0) 72%
+    );
+  }
+
+  .landing-neon-blob3 {
+    position: absolute;
+    width: min(58vw, 36rem);
+    height: min(58vw, 36rem);
+    left: 28%;
+    bottom: -24%;
+    border-radius: 9999px;
+    filter: blur(90px);
+    background: radial-gradient(
+      circle at center,
+      rgba(var(--neon-pink), 0.24) 0%,
+      rgba(var(--neon-pink), 0.08) 35%,
+      rgba(var(--neon-pink), 0) 72%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .landing-neon-streak {
+    position: absolute;
+    inset: -20%;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      125deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.07) 50%,
+      transparent 65%
+    );
+    transform: rotate(-6deg);
+  }
+
+  .landing-neon-grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.05;
+    mix-blend-mode: soft-light;
+    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  }
+
+  .landing-neon-high .landing-neon-layer::before,
+  .landing-neon-high .landing-neon-layer::after,
+  .landing-neon-high .landing-neon-blob3 {
+    opacity: 1;
+  }
+
+  .landing-neon-medium .landing-neon-layer::before,
+  .landing-neon-medium .landing-neon-layer::after,
+  .landing-neon-medium .landing-neon-blob3 {
+    opacity: 0.65;
+  }
+
+  .landing-neon-subtle .landing-neon-layer::before,
+  .landing-neon-subtle .landing-neon-layer::after,
+  .landing-neon-subtle .landing-neon-blob3 {
+    opacity: 0.45;
+  }
+
+  .landing-neon-heading {
+    color: rgb(var(--neon-heading));
+  }
+
+  .landing-neon-body {
+    color: rgb(var(--neon-body));
+  }
+
+  @keyframes neonAuroraDrift {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(2%, -2%, 0) scale(1.03);
+    }
+    100% {
+      transform: translate3d(-2%, 1%, 0) scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .landing-neon-float {
+      animation: neonAuroraDrift 24s ease-in-out infinite alternate;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-neon-float {
+      animation: none !important;
+    }
   }
 }
 

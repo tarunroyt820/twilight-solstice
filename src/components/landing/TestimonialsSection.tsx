@@ -33,8 +33,11 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section id="testimonials" className="relative px-4 py-32 sm:px-6 lg:px-8 bg-background">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary-rgb),0.05)_0%,transparent_50%)]" />
+    <section id="testimonials" className="relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden landing-neon-base landing-neon-subtle">
+      <div className="landing-neon-layer landing-neon-float" />
+      <div className="landing-neon-blob3 landing-neon-float" />
+      <div className="landing-neon-streak" />
+      <div className="landing-neon-grain" />
 
       <div className="mx-auto max-w-7xl relative">
         {/* Section Header */}
@@ -43,10 +46,10 @@ export function TestimonialsSection() {
             <Sparkles className="h-3 w-3" />
             Social Pulse
           </div>
-          <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">
+          <h2 className="landing-neon-heading text-4xl md:text-6xl font-black tracking-tight leading-tight">
             Verified Career <span className="text-gradient">Breakthroughs.</span>
           </h2>
-          <p className="max-w-xl text-lg md:text-xl font-medium text-muted-foreground leading-relaxed">
+          <p className="landing-neon-body max-w-xl text-lg md:text-xl font-medium leading-relaxed">
             Join 10,000+ top-tier builders who have upgraded their professional trajectory using the Nextaro protocol.
           </p>
         </div>

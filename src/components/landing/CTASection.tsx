@@ -6,15 +6,14 @@ export function CTASection() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden">
-      {/* Background with dynamic pulse */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-primary/5" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(var(--primary-rgb),0.1)_0%,transparent_70%)]" />
-      </div>
+    <section className="relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden landing-neon-base landing-neon-high">
+      <div className="landing-neon-layer landing-neon-float" />
+      <div className="landing-neon-blob3 landing-neon-float" />
+      <div className="landing-neon-streak" />
+      <div className="landing-neon-grain" />
 
       <div className="mx-auto max-w-6xl">
-        <div className="relative rounded-[4rem] bg-gradient-to-br from-primary via-accent to-primary bg-[length:200%_200%] animate-gradient p-1 shadow-[0_32px_120px_-20px_rgba(var(--primary-rgb),0.3)]">
+        <div className="relative rounded-[4rem] bg-[linear-gradient(135deg,#00E5FF_0%,#C026FF_50%,#FF3D81_100%)] bg-[length:200%_200%] animate-gradient p-1 shadow-[0_32px_120px_-20px_rgba(0,229,255,0.3)]">
           <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] rounded-[4rem]" />
 
           <div className="bg-background/10 backdrop-blur-3xl rounded-[3.9rem] p-12 md:p-24 text-center space-y-10 relative overflow-hidden">
@@ -41,7 +40,7 @@ export function CTASection() {
               <Button
                 size="lg"
                 onClick={() => navigate("/signup")}
-                className="h-20 w-full sm:w-auto px-12 rounded-3xl bg-white text-primary hover:bg-white/90 hover:scale-[1.05] transition-all text-lg font-black uppercase tracking-widest shadow-2xl shadow-black/20"
+                className="h-20 w-full sm:w-auto px-12 rounded-3xl bg-[#7CFFB2] text-[#081018] hover:bg-[#9BFFC8] hover:scale-[1.05] transition-all text-lg font-black uppercase tracking-widest shadow-2xl shadow-black/20"
               >
                 Join Nextaro Protocol
                 <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-1" />
@@ -50,7 +49,7 @@ export function CTASection() {
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/login")}
-                className="h-20 w-full sm:w-auto px-12 rounded-3xl border-white/30 bg-white/5 backdrop-blur-xl text-white hover:bg-white/10 text-lg font-black uppercase tracking-widest"
+                className="h-20 w-full sm:w-auto px-12 rounded-3xl border-transparent bg-[#F4F8FF] text-[#151526] hover:bg-white text-lg font-black uppercase tracking-widest"
               >
                 Sign In
               </Button>

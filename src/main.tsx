@@ -8,7 +8,7 @@ import { ThemeProvider } from './components/layout/ThemeProvider';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="nextro-theme">
             <BrowserRouter>
                 <App />
             </BrowserRouter>

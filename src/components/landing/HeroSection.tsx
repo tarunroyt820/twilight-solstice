@@ -8,49 +8,29 @@ export function HeroSection() {
   const navigate = useNavigate();
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 gradient-orange-purple relative overflow-hidden transition-colors duration-500 min-h-[calc(100vh-80px)] md:min-h-[calc(100vh-112px)] flex items-center">
-      {/* Background animated shapes */}
-      <div className="absolute inset-0 overflow-hidden opacity-20 pointer-events-none">
-        {[...Array(5)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-white"
-            style={{
-              width: `${Math.random() * 300 + 100}px`,
-              height: `${Math.random() * 300 + 100}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              x: [0, Math.random() * 150 - 75],
-              y: [0, Math.random() * 150 - 75],
-            }}
-            transition={{
-              repeat: Infinity,
-              repeatType: "reverse",
-              duration: Math.random() * 15 + 10,
-            }}
-          />
-        ))}
-      </div>
+    <section className="w-full py-12 md:py-24 lg:py-32 min-h-[calc(100vh-80px)] md:min-h-[calc(100vh-112px)] flex items-center overflow-hidden landing-neon-base landing-neon-high">
+      <div className="landing-neon-layer landing-neon-float" />
+      <div className="landing-neon-blob3 landing-neon-float" />
+      <div className="landing-neon-streak" />
+      <div className="landing-neon-grain" />
 
       <div className="container px-4 md:px-12 relative z-10 mx-auto max-w-7xl">
         <div className="grid gap-12 lg:grid-cols-2 items-center">
           {/* Left Column: Content */}
           <AnimatedElement animation="slide-up" className="space-y-6 flex flex-col items-start text-left">
             {/* Logo Placeholder / Badge */}
-            <div className="bg-white/90 backdrop-blur rounded-md p-3 mb-2 shadow-sm border border-white/20">
-              <div className="flex items-center gap-2 text-vibrant-purple font-black tracking-tighter italic text-xl px-4">
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-3 mb-2 shadow-xl border border-white/20">
+              <div className="flex items-center gap-2 text-[#0EA5E9] font-black tracking-tighter italic text-xl px-4">
                 <GraduationCap className="h-6 w-6" />
                 <span>PATHFINDER</span>
               </div>
             </div>
 
             <div className="space-y-4">
-              <h1 className="text-4xl font-extrabold tracking-tighter sm:text-6xl xl:text-7xl/none text-white leading-[1.1]">
+              <h1 className="landing-neon-heading text-4xl font-extrabold tracking-tighter sm:text-6xl xl:text-7xl/none leading-[1.1]">
                 Discover Your Ideal <br className="hidden xl:block" /> Career Path
               </h1>
-              <p className="max-w-[600px] text-white/90 md:text-xl font-medium">
+              <p className="landing-neon-body md:text-xl font-medium max-w-[600px]">
                 Our AI-powered platform analyses your skills, courses, and
                 CV to recommend the best career paths for you.
               </p>
@@ -59,7 +39,7 @@ export function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-4 pt-4 w-full sm:w-auto">
               <button
                 onClick={() => navigate("/signup")}
-                className="inline-flex items-center justify-center gap-2 bg-white text-vibrant-purple hover:bg-white/90 text-lg px-8 py-6 h-auto font-bold rounded-xl shadow-lg transition-all active:scale-95"
+                className="inline-flex items-center justify-center gap-2 bg-[#7CFFB2] text-[#081018] hover:bg-[#9BFFC8] text-lg px-8 py-6 h-auto font-bold rounded-xl shadow-lg transition-all active:scale-95"
               >
                 <Briefcase className="h-5 w-5" />
                 Get Started
@@ -69,7 +49,7 @@ export function HeroSection() {
               </button>
               <button
                 onClick={() => navigate("/login")}
-                className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white hover:bg-white/20 text-lg px-8 py-6 h-auto font-bold rounded-xl transition-all active:scale-95"
+                className="inline-flex items-center justify-center gap-2 bg-[#F4F8FF] text-[#151526] hover:bg-white text-lg px-8 py-6 h-auto font-bold rounded-xl transition-all active:scale-95"
               >
                 <FileText className="h-5 w-5" />
                 Learn More
