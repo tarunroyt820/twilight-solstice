@@ -8,7 +8,132 @@ export function HeroSection() {
   const navigate = useNavigate();
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 min-h-[calc(100vh-80px)] md:min-h-[calc(100vh-112px)] flex items-center overflow-hidden section-primary relative">
+    <section className="w-full py-12 md:py-24 lg:py-32 min-h-[calc(100vh-80px)] md:min-h-[calc(100vh-112px)] flex items-center overflow-hidden section-primary relative isolate">
+      {/* ═══════════════════════════════════════════════
+          BACKGROUND MOTION LAYER
+          All colours are shades from the existing palette.
+          Blobs sit behind all content (z-index: -1 / z-0).
+          They drift slowly so the bg feels alive, not flat.
+      ═══════════════════════════════════════════════ */}
+
+      {/* Blob A — Large teal aurora, top-left, slow drift */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 -left-40 w-[640px] h-[640px] rounded-full -z-10"
+        style={{
+          background:
+            "radial-gradient(circle at center, rgba(22,160,133,0.18) 0%, rgba(22,160,133,0.06) 40%, transparent 70%)",
+          filter: "blur(90px)",
+        }}
+        animate={{
+          x: [0, 28, -18, 0],
+          y: [0, -22, 26, 0],
+          scale: [1, 1.07, 0.95, 1],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 20,
+          ease: "easeInOut",
+        }}
+      />
+
+      {/* Blob B — Ice blue shimmer, top-right, counter drift */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 -right-48 w-[520px] h-[520px] rounded-full -z-10"
+        style={{
+          background:
+            "radial-gradient(circle at center, rgba(123,189,232,0.12) 0%, rgba(123,189,232,0.04) 40%, transparent 70%)",
+          filter: "blur(100px)",
+        }}
+        animate={{
+          x: [0, -22, 14, 0],
+          y: [0, 18, -14, 0],
+          scale: [1, 0.94, 1.05, 1],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 25,
+          ease: "easeInOut",
+          delay: 4,
+        }}
+      />
+
+      {/* Blob C — Deep navy depth, bottom-centre, gentle pulse */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-1/4 w-[480px] h-[480px] rounded-full -z-10"
+        style={{
+          background:
+            "radial-gradient(circle at center, rgba(20,37,62,0.55) 0%, rgba(21,61,76,0.20) 40%, transparent 70%)",
+          filter: "blur(80px)",
+        }}
+        animate={{
+          scale: [1, 1.10, 1],
+          opacity: [0.6, 1, 0.6],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 10,
+          ease: "easeInOut",
+          delay: 2,
+        }}
+      />
+
+      {/* Blob D — Teal accent, bottom-left, slow breathe */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-16 -left-16 w-[360px] h-[360px] rounded-full -z-10"
+        style={{
+          background:
+            "radial-gradient(circle at center, rgba(22,160,133,0.14) 0%, rgba(21,86,91,0.06) 40%, transparent 70%)",
+          filter: "blur(70px)",
+        }}
+        animate={{
+          scale: [1, 1.14, 1],
+          opacity: [0.5, 0.9, 0.5],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 8,
+          ease: "easeInOut",
+          delay: 1,
+        }}
+      />
+
+      {/* Blob E — Pale ice, bottom-right behind image area, drift */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-10 -right-16 w-[400px] h-[400px] rounded-full -z-10"
+        style={{
+          background:
+            "radial-gradient(circle at center, rgba(189,216,233,0.08) 0%, rgba(123,189,232,0.04) 40%, transparent 70%)",
+          filter: "blur(85px)",
+        }}
+        animate={{
+          x: [0, -12, 10, 0],
+          y: [0, -8, 16, 0],
+          scale: [1, 1.05, 0.97, 1],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 18,
+          ease: "easeInOut",
+          delay: 6,
+        }}
+      />
+
+      {/* Subtle diagonal light streak — static, no animation */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            "linear-gradient(125deg, transparent 30%, rgba(22,160,133,0.03) 50%, transparent 70%)",
+          transform: "rotate(-8deg) scale(1.3)",
+        }}
+      />
+
       <div className="container px-4 md:px-12 relative z-10 mx-auto max-w-7xl">
         <div className="grid gap-12 lg:grid-cols-2 items-center">
           {/* Left Column: Content */}
@@ -57,7 +182,7 @@ export function HeroSection() {
             <motion.div
               animate={{ y: [0, -15, 0] }}
               transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-              className="bg-white/10 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20 w-full"
+              className="bg-[rgba(20,37,62,0.60)] backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-[rgba(22,160,133,0.30)] w-full"
             >
               {/* Correct image from the source folder */}
               <img
@@ -72,6 +197,67 @@ export function HeroSection() {
               className="absolute -bottom-6 -left-6 w-32 h-32 bg-vibrant-pink rounded-full blur-3xl opacity-40"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ repeat: Infinity, duration: 4 }}
+            />
+
+            {/* Pulsing teal halo — sits directly behind the image card */}
+            <motion.div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-4 rounded-3xl -z-10"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, rgba(22,160,133,0.22) 0%, rgba(22,160,133,0.06) 55%, transparent 80%)",
+                filter: "blur(45px)",
+              }}
+              animate={{
+                scale: [1, 1.08, 1],
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 4,
+                ease: "easeInOut",
+              }}
+            />
+
+            {/* Teal corner glow — bottom-left of image */}
+            <motion.div
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-8 -left-8 w-36 h-36 rounded-full -z-10"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(22,160,133,0.45) 0%, transparent 70%)",
+                filter: "blur(32px)",
+              }}
+              animate={{
+                scale: [1, 1.30, 1],
+                opacity: [0.4, 0.85, 0.4],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 5,
+                ease: "easeInOut",
+              }}
+            />
+
+            {/* Ice blue corner glow — top-right of image */}
+            <motion.div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-8 -right-8 w-32 h-32 rounded-full -z-10"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(123,189,232,0.35) 0%, transparent 70%)",
+                filter: "blur(28px)",
+              }}
+              animate={{
+                scale: [1, 1.20, 1],
+                opacity: [0.35, 0.75, 0.35],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 6,
+                ease: "easeInOut",
+                delay: 2,
+              }}
             />
           </AnimatedElement>
         </div>
