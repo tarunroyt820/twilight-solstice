@@ -17,29 +17,29 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/60 backdrop-blur-2xl border-b border-border/50">
+    <header className="sticky top-0 z-50 w-full bg-[rgba(20,12,48,0.85)] backdrop-blur-2xl border-b border-[rgba(21,86,91,0.25)]">
       <nav className="mx-auto flex h-20 md:h-28 max-w-7xl items-center justify-between px-6 lg:px-12">
         {/* Logo Section - High Visibility */}
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-4 group">
             <div className="relative">
               <Logo size="sm" />
-              <div className="absolute -inset-4 bg-primary/20 blur-[32px] rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              <div className="absolute -inset-4 bg-[rgba(22,160,133,0.2)] blur-[32px] rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </div>
             <div className="hidden lg:flex flex-col">
-              <span className="text-xl font-black tracking-tighter text-foreground leading-none">NEXTARO</span>
-              <span className="text-[8px] font-black tracking-[0.3em] text-primary uppercase ml-0.5 mt-1">Intelligence</span>
+              <span className="text-xl font-black tracking-tighter text-white leading-none">NEXTARO</span>
+              <span className="text-[8px] font-black tracking-[0.3em] text-[#BDD8E9] uppercase ml-0.5 mt-1">Intelligence</span>
             </div>
           </Link>
         </div>
 
         {/* Desktop Navigation Links - Refined Hierarchy */}
-        <div className="hidden items-center bg-muted/20 backdrop-blur-2xl px-1.5 py-1.5 rounded-full border border-border/50 gap-1 md:flex">
+        <div className="hidden items-center bg-[rgba(22,160,133,0.08)] backdrop-blur-2xl px-1.5 py-1.5 rounded-full border border-[rgba(22,160,133,0.2)] gap-1 md:flex">
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
-              className="px-6 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] transition-all hover:text-primary rounded-full hover:bg-muted/30"
+              className="px-6 py-2 text-[10px] font-black text-[#BDD8E9] uppercase tracking-[0.2em] transition-colors hover:text-white rounded-full hover:bg-[rgba(22,160,133,0.15)]"
             >
               {link.label}
             </a>
@@ -52,23 +52,22 @@ export function Navbar() {
           <Button
             variant="ghost"
             onClick={() => navigate("/login")}
-            className="text-[10px] font-black uppercase tracking-[0.2em] px-6 h-12 rounded-2xl text-muted-foreground hover:text-foreground transition-all shadow-none"
+            className="text-[10px] font-black uppercase tracking-[0.2em] px-6 h-12 rounded-2xl text-[#BDD8E9] hover:text-white transition-colors shadow-none"
           >
             Login
           </Button>
           <Button
             onClick={() => navigate("/signup")}
-            className="relative group overflow-hidden text-[10px] font-black uppercase tracking-[0.2em] px-10 h-14 rounded-2xl bg-primary text-primary-foreground shadow-[0_12px_40px_-12px_rgba(var(--primary-rgb),0.5)] hover:shadow-[0_12px_50px_-12px_rgba(var(--primary-rgb),0.7)] active:scale-95 transition-all"
+            className="bg-[#16A085] text-white hover:bg-[#168777] font-bold rounded-xl px-4 py-2 glow-teal-sm transition-all"
           >
             <span className="relative z-10">Sign Up</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </Button>
         </div>
 
         {/* Mobile Toggle */}
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-2xl p-4 text-muted-foreground bg-muted/30 border border-border/50 hover:bg-muted/50 md:hidden transition-all"
+          className="inline-flex items-center justify-center rounded-2xl p-4 text-[#BDD8E9] bg-[rgba(22,160,133,0.1)] border border-[rgba(21,86,91,0.25)] hover:bg-[rgba(22,160,133,0.15)] md:hidden transition-all"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -78,13 +77,13 @@ export function Navbar() {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="absolute top-20 left-0 right-0 p-6 animate-in fade-in slide-in-from-top-4 duration-500 md:hidden z-50">
-          <div className="rounded-[3rem] border border-border/50 bg-background/95 backdrop-blur-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] p-10 space-y-10">
+          <div className="rounded-[3rem] border border-[rgba(21,86,91,0.25)] bg-[rgba(20,12,48,0.95)] backdrop-blur-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] p-10 space-y-10">
             <div className="flex flex-col gap-6">
               {navLinks.map((link) => (
                 <a
                   key={link.label}
                   href={link.href}
-                  className="text-2xl font-black uppercase tracking-tighter text-muted-foreground hover:text-primary transition-all flex items-center justify-between"
+                  className="text-2xl font-black uppercase tracking-tighter text-[#BDD8E9] hover:text-white transition-all flex items-center justify-between"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
@@ -92,14 +91,14 @@ export function Navbar() {
                 </a>
               ))}
             </div>
-            <div className="grid grid-cols-1 gap-4 pt-6 border-t border-border/50">
+            <div className="grid grid-cols-1 gap-4 pt-6 border-t border-[rgba(21,86,91,0.25)]">
               <Button
                 variant="outline"
                 onClick={() => {
                   navigate("/login");
                   setMobileMenuOpen(false);
                 }}
-                className="rounded-3xl h-16 font-black uppercase tracking-widest text-xs border-border bg-muted/30"
+                className="rounded-3xl h-16 font-black uppercase tracking-widest text-xs border-[rgba(22,160,133,0.25)] bg-[rgba(22,160,133,0.08)] text-white hover:bg-[rgba(22,160,133,0.15)]"
               >
                 Sign In
               </Button>
@@ -108,7 +107,7 @@ export function Navbar() {
                   navigate("/signup");
                   setMobileMenuOpen(false);
                 }}
-                className="rounded-3xl h-16 font-black uppercase tracking-widest text-xs shadow-2xl shadow-primary/20"
+                className="rounded-3xl h-16 font-black uppercase tracking-widest text-xs bg-[#16A085] text-white hover:bg-[#168777] glow-teal shadow-2xl"
               >
                 Get Started
               </Button>

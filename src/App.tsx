@@ -20,7 +20,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
 export default function App() {
     return (
-        <div className="min-h-screen bg-background text-foreground">
+        <div className="min-h-screen bg-[#140C30] text-white">
             <Toaster position="top-right" />
             <Routes>
                 {/* Public Routes */}
@@ -31,9 +31,13 @@ export default function App() {
                             <Navbar />
                             <main>
                                 <HeroSection />
+                                <div className="teal-divider max-w-5xl mx-auto" />
                                 <FeaturesSection />
+                                <div className="teal-divider max-w-5xl mx-auto" />
                                 <HowItWorksSection />
+                                <div className="teal-divider max-w-5xl mx-auto" />
                                 <TestimonialsSection />
+                                <div className="teal-divider max-w-5xl mx-auto" />
                                 <CTASection />
                             </main>
                             <Footer />

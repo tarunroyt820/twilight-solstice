@@ -33,23 +33,18 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section id="testimonials" className="relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden landing-neon-base landing-neon-subtle">
-      <div className="landing-neon-layer landing-neon-float" />
-      <div className="landing-neon-blob3 landing-neon-float" />
-      <div className="landing-neon-streak" />
-      <div className="landing-neon-grain" />
-
+    <section id="testimonials" className="section-alt relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden">
       <div className="mx-auto max-w-7xl relative">
         {/* Section Header */}
         <div className="flex flex-col items-center text-center space-y-6 mb-24">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-black uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(22,160,133,0.12)] text-[#16A085] text-[10px] font-black uppercase tracking-widest border border-[rgba(22,160,133,0.25)]">
             <Sparkles className="h-3 w-3" />
             Social Pulse
           </div>
-          <h2 className="landing-neon-heading text-4xl md:text-6xl font-black tracking-tight leading-tight">
-            Verified Career <span className="text-gradient">Breakthroughs.</span>
+          <h2 className="text-white text-4xl md:text-6xl font-black tracking-tight leading-tight">
+            Verified Career <span className="text-teal-gradient">Breakthroughs.</span>
           </h2>
-          <p className="landing-neon-body max-w-xl text-lg md:text-xl font-medium leading-relaxed">
+          <p className="text-[#BDD8E9] max-w-xl text-lg md:text-xl font-medium leading-relaxed">
             Join 10,000+ top-tier builders who have upgraded their professional trajectory using the Nextaro protocol.
           </p>
         </div>
@@ -59,7 +54,7 @@ export function TestimonialsSection() {
           {testimonials.map((item, i) => (
             <Card
               key={i}
-              className="group relative rounded-[2.5rem] border-border/40 bg-card/60 backdrop-blur-xl shadow-xl shadow-black/5 transition-all duration-500 hover:translate-y-[-8px] hover:border-primary/30"
+              className="abyss-card group relative shadow-xl shadow-black/5 transition-all duration-500 hover:translate-y-[-8px]"
             >
               <CardContent className="p-10 space-y-8">
                 {/* Rating & Icons */}
@@ -68,17 +63,17 @@ export function TestimonialsSection() {
                     {Array.from({ length: item.rating }).map((_, idx) => (
                       <Star
                         key={idx}
-                        className="h-4 w-4 fill-primary text-primary"
+                        className="h-4 w-4 fill-[#16A085] text-[#16A085]"
                       />
                     ))}
                   </div>
-                  <div className="h-10 w-10 rounded-2xl bg-muted/30 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
+                  <div className="h-10 w-10 rounded-2xl bg-[rgba(22,160,133,0.1)] flex items-center justify-center text-[#BDD8E9] group-hover:text-white transition-colors">
                     <Quote className="h-5 w-5" />
                   </div>
                 </div>
 
                 {/* Content */}
-                <p className="text-lg font-bold leading-relaxed text-foreground/90 italic">
+                <p className="text-lg font-bold leading-relaxed text-white italic">
                   "{item.content}"
                 </p>
 
@@ -88,20 +83,20 @@ export function TestimonialsSection() {
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="h-16 w-16 rounded-2xl object-cover ring-4 ring-muted/20"
+                      className="h-16 w-16 rounded-2xl object-cover ring-4 ring-[rgba(22,160,133,0.2)]"
                     />
                     {item.verified && (
-                      <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-2 border-card">
+                      <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-[#16A085] text-white rounded-full flex items-center justify-center shadow-lg border-2 border-[#14253E]">
                         <BadgeCheck className="h-3.5 w-3.5" />
                       </div>
                     )}
                   </div>
                   <div>
-                    <p className="font-black text-foreground tracking-tight">{item.name}</p>
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                    <p className="font-black text-white tracking-tight">{item.name}</p>
+                    <p className="text-xs font-bold text-[#7BBDE8] uppercase tracking-widest">
                       {item.role}
                     </p>
-                    <p className="text-[10px] font-black text-primary uppercase tracking-tighter pt-1">
+                    <p className="text-[10px] font-black text-[#16A085] uppercase tracking-tighter pt-1">
                       {item.company}
                     </p>
                   </div>

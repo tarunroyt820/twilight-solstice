@@ -49,29 +49,24 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden landing-neon-base landing-neon-medium">
-      <div className="landing-neon-layer landing-neon-float" />
-      <div className="landing-neon-blob3 landing-neon-float" />
-      <div className="landing-neon-streak" />
-      <div className="landing-neon-grain" />
-
+    <section id="features" className="section-alt relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden">
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
         <div className="flex flex-col lg:flex-row items-end justify-between gap-12 mb-32">
           <div className="max-w-2xl space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] border border-primary/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(22,160,133,0.12)] text-[#16A085] text-[10px] font-black uppercase tracking-[0.2em] border border-[rgba(22,160,133,0.25)]">
               <Zap className="h-3 w-3" />
               Core Capabilities
             </div>
-            <h2 className="landing-neon-heading text-5xl md:text-7xl font-black tracking-tight leading-[0.9]">
+            <h2 className="text-white text-5xl md:text-7xl font-black tracking-tight leading-[0.9]">
               Supercharge your <br />
-              <span className="text-gradient">Professional Engine.</span>
+              <span className="text-teal-gradient">Professional Engine.</span>
             </h2>
-            <p className="landing-neon-body text-lg md:text-xl font-medium leading-relaxed">
+            <p className="text-[#BDD8E9] text-lg md:text-xl font-medium leading-relaxed">
               Nextaro isn't a simple dashboard—it's a high-precision neural command center <br className="hidden md:block" /> for your entire global career trajectory.
             </p>
           </div>
-          <Button variant="outline" className="h-16 px-10 rounded-2xl font-black uppercase tracking-[0.2em] gap-3 group border-border hover:bg-muted/50 text-xs text-foreground">
+          <Button variant="outline" className="h-16 px-10 rounded-2xl font-black uppercase tracking-[0.2em] gap-3 group border-[rgba(22,160,133,0.25)] text-white hover:bg-[rgba(22,160,133,0.1)] text-xs">
             System Documentation
             <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Button>
@@ -84,26 +79,26 @@ export function FeaturesSection() {
               {/* Outer Glow */}
               <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-40 blur-[80px] transition-opacity duration-700`} />
 
-              <div className="relative h-full p-10 lg:p-12 rounded-[3.5rem] border border-border/50 bg-card/40 backdrop-blur-3xl transition-all duration-500 hover:translate-y-[-12px] hover:border-primary/30 hover:bg-card/60 shadow-xl shadow-black/5 overflow-hidden">
+              <div className="abyss-card relative h-full p-10 lg:p-12 transition-all duration-500 hover:translate-y-[-12px] shadow-xl shadow-black/5 overflow-hidden">
                 {/* Inner Color Tint */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-20 transition-opacity duration-500`} />
 
                 <div className="relative z-10 space-y-8">
-                  <div className={`h-20 w-20 rounded-[1.5rem] bg-muted/30 flex items-center justify-center border border-border transition-all duration-500 group-hover:bg-background group-hover:scale-110 group-hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)]`}>
-                    <feature.icon className={`h-10 w-10 ${feature.iconColor}`} />
+                  <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-[rgba(22,160,133,0.12)] border border-[rgba(22,160,133,0.2)] transition-all duration-500 group-hover:scale-110">
+                    <feature.icon className="h-8 w-8 text-[#16A085]" />
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-3xl font-black tracking-tight text-foreground">{feature.title}</h3>
-                    <p className="text-lg font-medium leading-relaxed text-muted-foreground group-hover:text-foreground/80 transition-colors duration-500">
+                    <h3 className="text-2xl font-black tracking-tight text-white">{feature.title}</h3>
+                    <p className="text-base font-medium leading-relaxed text-[#BDD8E9] transition-colors duration-500">
                       {feature.description}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-4 pt-8 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">LEARN MORE</span>
-                    <div className="h-px flex-grow bg-primary/20" />
-                    <ChevronRight className="h-4 w-4 text-primary" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#16A085]">LEARN MORE</span>
+                    <div className="h-px flex-grow bg-[rgba(22,160,133,0.2)]" />
+                    <ChevronRight className="h-4 w-4 text-[#16A085]" />
                   </div>
                 </div>
               </div>

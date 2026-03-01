@@ -4,93 +4,60 @@
 
 @layer base {
   :root {
-    --background: oklch(0.99 0.005 250);
-    --foreground: oklch(0.15 0.02 250);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.15 0.02 250);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.15 0.02 250);
-    --primary: oklch(0.55 0.22 260);
-    --primary-foreground: oklch(1 0 0);
-    --secondary: oklch(0.97 0.01 250);
-    --secondary-foreground: oklch(0.15 0.02 250);
-    --muted: oklch(0.96 0.005 250);
-    --muted-foreground: oklch(0.45 0.015 250);
-    --accent: oklch(0.6 0.2 280);
-    --accent-foreground: oklch(1 0 0);
-    --destructive: oklch(0.6 0.2 25);
-    --destructive-foreground: oklch(1 0 0);
-    --border: oklch(0.92 0.01 250);
-    --input: oklch(0.97 0.005 250);
-    --ring: oklch(0.55 0.22 260);
-    --radius: 1.25rem;
-    /* Aurora Mesh Tokens */
-    --aurora-base: 248 250 255;    /* #F8FAFF */
-    --aurora-indigo: 99 102 241;   /* #6366F1 */
-    --aurora-violet: 139 92 246;   /* #8B5CF6 */
-    --aurora-teal: 20 184 166;     /* #14B8A6 */
-    
-    /* Option B Futuristic Tokens */
-    --aurora-base: 11 16 32;      /* #0B1020 */
-    --aurora-cyan: 14 165 233;    /* #0EA5E9 */
-    --aurora-magenta: 168 85 247; /* #A855F7 */
-    --aurora-pink: 244 63 94;     /* #F43F5E */
-    --landing-text: 236 245 255;  /* high contrast text */
-    --landing-muted: 167 186 214; /* readable muted text */
+    /* Core semantic tokens — Deep Abyss + Emerald Teal */
+    --background:           #140C30;
+    --background-alt:       #14253E;
+    --background-elevated:  #153D4C;
+    --foreground:           #FFFFFF;
+    --foreground-muted:     #BDD8E9;
+    --foreground-dim:       #7BBDE8;
 
-    /* Neon Noir Tokens */
-    --neon-base: 9 11 20;         /* #090B14 */
-    --neon-cyan: 0 229 255;       /* #00E5FF */
-    --neon-violet: 192 38 255;    /* #C026FF */
-    --neon-pink: 255 61 129;      /* #FF3D81 */
-    --neon-mint: 124 255 178;     /* #7CFFB2 */
-    --neon-heading: 244 248 255;  /* #F4F8FF */
-    --neon-body: 200 210 232;     /* #C8D2E8 */
+    /* Primary/Accent = Emerald Teal */
+    --primary:              #16A085;
+    --primary-hover:        #168777;
+    --primary-subtle:       #156F69;
+    --primary-dim:          #15565B;
+    --primary-foreground:   #FFFFFF;
+
+    /* Borders */
+    --border:               rgba(21, 86, 91, 0.25);
+    --border-highlight:     rgba(22, 160, 133, 0.35);
+
+    /* Cards */
+    --card:                 #14253E;
+    --card-foreground:      #FFFFFF;
+
+    /* Radius */
+    --radius: 1rem;
+
+    /* Legacy tokens for backwards compatibility */
+    --popover: #14253E;
+    --popover-foreground: #FFFFFF;
+    --secondary: #14253E;
+    --secondary-foreground: #FFFFFF;
+    --muted: #15565B;
+    --muted-foreground: #7BBDE8;
+    --accent: #16A085;
+    --accent-foreground: #FFFFFF;
+    --destructive: #dc2626;
+    --destructive-foreground: #FFFFFF;
+    --input: #14253E;
+    --ring: #16A085;
   }
 
   .dark {
-    --background: oklch(0.12 0.02 250);
-    --foreground: oklch(0.98 0.005 250);
-    --card: oklch(0.16 0.02 250);
-    --card-foreground: oklch(0.98 0.005 250);
-    --popover: oklch(0.16 0.02 250);
-    --popover-foreground: oklch(0.98 0.005 250);
-    --primary: oklch(0.65 0.2 260);
-    --primary-foreground: oklch(0.12 0.02 250);
-    --secondary: oklch(0.22 0.02 250);
-    --secondary-foreground: oklch(0.98 0.005 250);
-    --muted: oklch(0.2 0.02 250);
-    --muted-foreground: oklch(0.7 0.01 250);
-    --accent: oklch(0.7 0.18 280);
-    --accent-foreground: oklch(0.12 0.02 250);
-    --destructive: oklch(0.6 0.2 25);
-    --destructive-foreground: oklch(0.98 0.005 250);
-    --border: oklch(0.25 0.02 250);
-    --input: oklch(0.22 0.02 250);
-    --ring: oklch(0.65 0.2 260);
-
-    /* Aurora Mesh Tokens - Dark mode */
-    --aurora-base: 14 18 34;
-    --aurora-indigo: 99 102 241;
-    --aurora-violet: 139 92 246;
-    --aurora-teal: 20 184 166;
-    
-    /* Option B Futuristic Tokens */
-    --aurora-base: 11 16 32;
-    --aurora-cyan: 14 165 233;
-    --aurora-magenta: 168 85 247;
-    --aurora-pink: 244 63 94;
-    --landing-text: 236 245 255;
-    --landing-muted: 167 186 214;
-
-    /* Neon Noir Tokens */
-    --neon-base: 9 11 20;
-    --neon-cyan: 0 229 255;
-    --neon-violet: 192 38 255;
-    --neon-pink: 255 61 129;
-    --neon-mint: 124 255 178;
-    --neon-heading: 244 248 255;
-    --neon-body: 200 210 232;
+    /* Dark mode is the default — same values */
+    --background:           #140C30;
+    --foreground:           #FFFFFF;
+    --foreground-muted:     #BDD8E9;
+    --foreground-dim:       #7BBDE8;
+    --primary:              #16A085;
+    --primary-hover:        #168777;
+    --card:                 #14253E;
+    --card-foreground:      #FFFFFF;
+    --border:               rgba(21, 86, 91, 0.25);
+    --border-highlight:     rgba(22, 160, 133, 0.35);
+    --muted-foreground:     #7BBDE8;
   }
 }
 
@@ -106,6 +73,52 @@
 }
 
 @layer utilities {
+  /* Teal glow effects */
+  .glow-teal {
+    box-shadow: 0 0 20px rgba(22, 160, 133, 0.4), 0 0 60px rgba(22, 160, 133, 0.15);
+  }
+  .glow-teal-sm {
+    box-shadow: 0 0 12px rgba(22, 160, 133, 0.3);
+  }
+
+  /* Teal text gradient */
+  .text-teal-gradient {
+    background: linear-gradient(135deg, #16A085 0%, #7BBDE8 60%, #16A085 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200%;
+    animation: gradient 6s ease infinite;
+  }
+
+  /* Card styles */
+  .abyss-card {
+    background-color: #14253E;
+    border: 1px solid rgba(21, 86, 91, 0.25);
+    border-radius: 1.5rem;
+    backdrop-filter: blur(16px);
+    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .abyss-card:hover {
+    border-color: rgba(22, 160, 133, 0.35);
+    transform: translateY(-6px);
+    box-shadow: 0 24px 60px rgba(22, 160, 133, 0.12);
+  }
+
+  /* Section backgrounds */
+  .section-primary {
+    background-color: #140C30;
+  }
+  .section-alt {
+    background-color: #14253E;
+  }
+
+  /* Divider */
+  .teal-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(22, 160, 133, 0.4), transparent);
+  }
+
   .glass {
     @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31, 38, 135, 0.07)];
   }
@@ -510,6 +523,29 @@
     color: rgb(var(--neon-body));
   }
 
+  .landing-neon-card {
+    background-color: rgba(var(--neon-card-bg), 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(var(--neon-border), 0.08);
+    border-radius: 1.5rem;
+    color: rgb(var(--neon-heading));
+  }
+
+  .neon-glow-cyan {
+    box-shadow: 0 0 24px rgba(var(--neon-cyan), 0.35), 0 0 60px rgba(var(--neon-cyan), 0.15);
+  }
+
+  .neon-glow-violet {
+    box-shadow: 0 0 24px rgba(var(--neon-violet), 0.35), 0 0 60px rgba(var(--neon-violet), 0.12);
+  }
+
+  .neon-text-gradient {
+    background: linear-gradient(135deg, #00E5FF 0%, #C026FF 50%, #FF3D81 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   @keyframes neonAuroraDrift {
     0% {
       transform: translate3d(0, 0, 0) scale(1);
@@ -583,13 +619,13 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--muted-foreground), transparent 80%);
+  background: linear-gradient(180deg, rgba(var(--neon-cyan), 0.5), rgba(var(--neon-violet), 0.5));
   border-radius: 9999px;
   transition: background-color 0.3s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--muted-foreground), transparent 60%);
+  background: linear-gradient(180deg, rgba(var(--neon-cyan), 0.7), rgba(var(--neon-violet), 0.7));
 }
 
 /* AI Prose Custom Styles */
