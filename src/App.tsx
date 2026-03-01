@@ -20,7 +20,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
 export default function App() {
     return (
-        <div className="min-h-screen bg-[#140C30] text-white">
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
             <Toaster position="top-right" />
             <Routes>
                 {/* Public Routes */}
