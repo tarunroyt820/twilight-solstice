@@ -16,18 +16,18 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[rgba(20,12,48,0.85)] backdrop-blur-2xl border-b border-[rgba(21,86,91,0.25)]">
+    <header className="sticky top-0 z-50 w-full bg-[rgba(20,12,48,0.85)] backdrop-blur-2xl border-b border-[rgba(21,86,91,0.25)] mb-6">
       <nav className="mx-auto flex h-20 md:h-28 max-w-7xl items-center justify-between px-6 lg:px-12">
         {/* Logo Section - High Visibility */}
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-4 group">
-            <div className="relative">
-              <Logo size="sm" />
-              <div className="absolute -inset-4 bg-[rgba(22,160,133,0.2)] blur-[32px] rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="relative flex items-center justify-center" style={{ background: 'transparent' }}>
+              <Logo size="md" className="brightness-110" />
+              <div className="absolute -inset-4 bg-[rgba(22,160,133,0.25)] blur-[40px] rounded-full -z-10 opacity-60 group-hover:opacity-100 transition-opacity duration-700" />
             </div>
             <div className="hidden lg:flex flex-col">
-              <span className="text-xl font-black tracking-tighter text-white leading-none">NEXTARO</span>
-              <span className="text-[8px] font-black tracking-[0.3em] text-[#BDD8E9] uppercase ml-0.5 mt-1">Intelligence</span>
+              <span className="text-2xl font-black tracking-tighter text-white leading-none">NEXTARO</span>
+              <span className="text-[11px] font-black tracking-[0.3em] text-[#BDD8E9] uppercase ml-0.5 mt-1">Intelligence</span>
             </div>
           </Link>
         </div>
@@ -38,7 +38,7 @@ export function Navbar() {
             <a
               key={link.label}
               href={link.href}
-              className="px-6 py-2 text-[10px] font-black text-[#BDD8E9] uppercase tracking-[0.2em] transition-colors hover:text-white rounded-full hover:bg-[rgba(22,160,133,0.15)]"
+              className="px-6 py-2 text-sm font-black text-[#BDD8E9] uppercase tracking-[0.15em] transition-colors hover:text-white rounded-full hover:bg-[rgba(22,160,133,0.15)]"
             >
               {link.label}
             </a>
@@ -50,7 +50,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             onClick={() => navigate("/login")}
-            className="text-[10px] font-black uppercase tracking-[0.2em] px-6 h-12 rounded-2xl text-[#BDD8E9] hover:text-white transition-colors shadow-none"
+            className="text-sm font-black uppercase tracking-[0.15em] px-6 h-12 rounded-2xl text-[#BDD8E9] hover:text-white transition-colors shadow-none"
           >
             Login
           </Button>

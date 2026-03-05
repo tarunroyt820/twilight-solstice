@@ -38,9 +38,9 @@ export function Logo({ className = "", size = "md", onClick }: LogoProps) {
     };
 
     const sizeClasses = {
-        sm: "h-12",
-        md: "h-16",
-        lg: "h-20",
+        sm: "h-10",
+        md: "h-[64px]",
+        lg: "h-[76px]",
         xl: "h-24"
     };
 
@@ -51,11 +51,14 @@ export function Logo({ className = "", size = "md", onClick }: LogoProps) {
             role="button"
             tabIndex={0}
             aria-label="Nextaro Logo"
+            style={{ background: 'transparent' }}
         >
             <img
-                src={logo}
+                src={`${logo}?v=3`}
                 alt="Nextaro"
-                className={`${sizeClasses[size]} w-auto object-contain drop-shadow-sm`}
+                className={`${sizeClasses[size]} w-auto object-contain`}
+                style={{ mixBlendMode: 'multiply', background: 'transparent' }}
+                key={Date.now()}
             />
         </div>
     );
