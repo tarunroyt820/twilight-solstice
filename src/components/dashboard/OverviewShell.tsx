@@ -37,14 +37,14 @@ export function OverviewShell() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                     { title: "Career Match", value: "85%", trend: "+5%", icon: Target, color: "text-primary", bg: "bg-primary/10" },
                     { title: "Skills Mastered", value: "12", trend: "+3", icon: Brain, color: "text-accent", bg: "bg-accent/10" },
                     { title: "Learning Hours", value: "48", trend: "+8h", icon: BookOpen, color: "text-blue-500", bg: "bg-blue-500/10" },
                     { title: "Network", value: "24", trend: "+6", icon: Users, color: "text-orange-500", bg: "bg-orange-500/10" },
                 ].map((stat, i) => (
-                    <Card key={i} className="rounded-[2.5rem] border-border/40 bg-card/60 backdrop-blur-sm shadow-xl shadow-black/5 hover:translate-y-[-4px] transition-all duration-300">
+                    <Card key={i} className="rounded-[2.5rem] border border-[rgba(22,160,133,0.20)] bg-card/60 backdrop-blur-sm shadow-xl shadow-black/5 hover:border-[rgba(22,160,133,0.50)] hover:shadow-[0_0_25px_rgba(22,160,133,0.12)] hover:translate-y-[-4px] transition-all duration-300 cursor-pointer">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
                                 {stat.title}
@@ -68,9 +68,9 @@ export function OverviewShell() {
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid gap-8 lg:grid-cols-12">
+            <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
                 {/* Career Progress Chart Area */}
-                <Card className="rounded-[2.5rem] border-border/40 bg-card/60 backdrop-blur-sm shadow-xl shadow-black/5 lg:col-span-8 overflow-hidden">
+                <Card className="rounded-[2.5rem] border border-[rgba(22,160,133,0.20)] bg-card/60 backdrop-blur-sm shadow-xl shadow-black/5 hover:border-[rgba(22,160,133,0.40)] hover:shadow-[0_0_30px_rgba(22,160,133,0.10)] lg:col-span-2 overflow-hidden transition-all duration-300">
                     <CardHeader className="p-8">
                         <div className="flex items-center justify-between mb-2">
                             <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
@@ -116,7 +116,7 @@ export function OverviewShell() {
                 </Card>
 
                 {/* Activity Feed */}
-                <Card className="rounded-[2.5rem] border-border/40 bg-card/60 backdrop-blur-sm shadow-xl shadow-black/5 lg:col-span-4 flex flex-col">
+                <Card className="rounded-[2.5rem] border-border/40 bg-card/60 backdrop-blur-sm shadow-xl shadow-black/5 lg:col-span-1 flex flex-col">
                     <CardHeader className="p-8">
                         <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
                             <TrendingUp className="h-6 w-6 text-accent" />

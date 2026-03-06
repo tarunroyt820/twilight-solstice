@@ -198,7 +198,7 @@ export function SettingsShell() {
                                             </div>
                                         </div>
                                         <button className="h-8 w-14 bg-primary rounded-full relative shadow-inner">
-                                            <div className="absolute right-1 top-1 h-6 w-6 bg-white rounded-full shadow-md" />
+                                            <div className="absolute right-1 top-1 h-6 w-6 rounded-full shadow-md" style={{ background: '#FFFFFF' }} />
                                         </button>
                                     </div>
                                 ))}

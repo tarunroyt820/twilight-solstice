@@ -61,7 +61,7 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="section-alt relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden">
+    <section id="features" className="section-alt relative px-4 md:px-8 lg:px-16 py-12 md:py-16 lg:py-24 overflow-hidden">
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
         <div className="flex flex-col lg:flex-row items-end justify-between gap-12 mb-32">
@@ -70,7 +70,7 @@ export function FeaturesSection() {
               <Zap className="h-3 w-3" />
               Core Capabilities
             </div>
-            <h2 className="text-white text-5xl md:text-7xl font-black tracking-tight leading-[0.9]">
+            <h2 className="text-white text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[0.9]">
               Supercharge your <br />
               <span className="text-teal-gradient">Professional Engine.</span>
             </h2>
@@ -78,16 +78,16 @@ export function FeaturesSection() {
               Nextaro isn't a simple dashboard—it's a high-precision neural command center <br className="hidden md:block" /> for your entire global career trajectory.
             </p>
           </div>
-          <Button variant="outline" className="h-16 px-10 rounded-2xl font-black uppercase tracking-[0.2em] gap-3 group border-[rgba(22,160,133,0.25)] text-white hover:bg-[rgba(22,160,133,0.1)] text-xs">
+          <Button variant="outline" className="h-16 px-10 rounded-2xl font-black uppercase tracking-[0.2em] gap-3 group border-[rgba(22,160,133,0.40)] text-white hover:bg-[rgba(22,160,133,0.10)] text-xs">
             System Documentation
             <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>
 
         {/* Features Grid */}
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, i) => (
-            <div key={i} className="group relative">
+            <div key={i} className="group relative w-full">
               {/* Outer Glow */}
               <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-40 blur-[80px] transition-opacity duration-700`} />
 
@@ -121,7 +121,7 @@ export function FeaturesSection() {
                 </div>
 
                 <div className="relative z-10 space-y-8">
-                  <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-[rgba(22,160,133,0.12)] border border-[rgba(22,160,133,0.2)] transition-all duration-500 group-hover:scale-110">
+                  <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-[rgba(22,160,133,0.15)] border border-[rgba(22,160,133,0.20)] transition-all duration-500 group-hover:scale-110">
                     <feature.icon className="h-8 w-8 text-[#16A085]" />
                   </div>
 

@@ -6,12 +6,12 @@ export function CTASection() {
   const navigate = useNavigate();
 
   return (
-    <section className="section-primary relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden">
+    <section className="section-primary relative px-4 md:px-8 lg:px-16 py-12 md:py-16 lg:py-24 overflow-hidden">
       <div className="mx-auto max-w-6xl">
         <div className="relative rounded-[4rem] bg-[linear-gradient(135deg,#16A085_0%,#153D4C_50%,#7BBDE8_100%)] p-1 shadow-[0_32px_120px_-20px_rgba(22,160,133,0.3)]">
           <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] rounded-[4rem]" />
 
-          <div className="bg-[rgba(20,12,48,0.9)] backdrop-blur-3xl rounded-[3.9rem] p-12 md:p-24 text-center space-y-10 relative overflow-hidden">
+          <div className="bg-[#14253E] backdrop-blur-3xl rounded-[3.9rem] p-12 md:p-24 text-center space-y-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
               <Globe className="h-64 w-64 text-white" />
             </div>
@@ -21,7 +21,7 @@ export function CTASection() {
                 <Sparkles className="h-5 w-5 animate-pulse" />
                 <span className="text-xs font-black uppercase tracking-widest">Immediate Deployment</span>
               </div>
-              <h2 className="text-white text-4xl md:text-7xl font-black tracking-tight leading-[0.9]">
+              <h2 className="text-white text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[0.9]">
                 Unlock your <br />
                 Future Today.
               </h2>
@@ -31,7 +31,7 @@ export function CTASection() {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-10 pt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10 pt-4 w-full sm:w-auto">
               <Button
                 size="lg"
                 onClick={() => navigate("/signup")}
@@ -44,7 +44,7 @@ export function CTASection() {
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/login")}
-                className="h-20 w-full sm:w-auto px-12 rounded-3xl border-[rgba(22,160,133,0.4)] bg-transparent text-white hover:bg-[rgba(22,160,133,0.1)] text-lg font-black uppercase tracking-widest"
+                className="h-20 w-full sm:w-auto px-12 rounded-3xl border-[rgba(22,160,133,0.40)] bg-transparent text-white hover:bg-[rgba(22,160,133,0.10)] text-lg font-black uppercase tracking-widest"
               >
                 Sign In
               </Button>

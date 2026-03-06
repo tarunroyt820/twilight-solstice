@@ -38,10 +38,10 @@ export function Logo({ className = "", size = "md", onClick }: LogoProps) {
     };
 
     const sizeClasses = {
-        sm: "h-10",
-        md: "h-[64px]",
-        lg: "h-[76px]",
-        xl: "h-24"
+        sm: "h-12",
+        md: "h-[80px]",
+        lg: "h-[90px]",
+        xl: "h-28"
     };
 
     return (
@@ -57,7 +57,7 @@ export function Logo({ className = "", size = "md", onClick }: LogoProps) {
                 src={`${logo}?v=3`}
                 alt="Nextaro"
                 className={`${sizeClasses[size]} w-auto object-contain`}
-                style={{ mixBlendMode: 'multiply', background: 'transparent' }}
+                style={{ mixBlendMode: 'screen', background: 'transparent' }}
                 key={Date.now()}
             />
         </div>

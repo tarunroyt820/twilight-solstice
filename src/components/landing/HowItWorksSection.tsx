@@ -33,7 +33,7 @@ const steps = [
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="section-primary relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden">
+    <section id="how-it-works" className="section-primary relative px-4 md:px-8 lg:px-16 py-12 md:py-16 lg:py-24 overflow-hidden">
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
         <div className="flex flex-col items-center text-center space-y-6 mb-24">
@@ -41,7 +41,7 @@ export function HowItWorksSection() {
             <Sparkles className="h-3 w-3" />
             Operational Protocol
           </div>
-          <h2 className="text-white text-5xl md:text-7xl font-black tracking-tight leading-[0.9]">
+          <h2 className="text-white text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[0.9]">
             Automate Your <br />
             <span className="text-teal-gradient">Evolution.</span>
           </h2>
@@ -52,9 +52,9 @@ export function HowItWorksSection() {
         </div>
 
         {/* Steps Journey Card Grid */}
-        <div className="grid gap-8 lg:grid-cols-4 relative">
+        <div className="grid gap-8 grid-cols-1 lg:grid-cols-4 relative">
           {steps.map((item, i) => (
-            <div key={i} className="group relative">
+            <div key={i} className="group relative w-full">
               {/* Background Glow */}
               <div className="absolute inset-0 bg-[rgba(22,160,133,0.2)] opacity-0 group-hover:opacity-100 blur-[80px] transition-opacity duration-700" />
 
@@ -62,8 +62,8 @@ export function HowItWorksSection() {
                 {/* Step Header */}
                 <div className="flex flex-col gap-6 mb-8">
                   <div className="flex items-center justify-between">
-                    <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-[rgba(22,160,133,0.12)] border border-[rgba(22,160,133,0.2)] transition-all duration-500 group-hover:scale-110">
-                      <item.icon className="h-8 w-8 text-white transition-colors" />
+                    <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-[rgba(22,160,133,0.15)] border border-[rgba(22,160,133,0.20)] transition-all duration-500 group-hover:scale-110">
+                      <item.icon className="h-8 w-8 text-[#16A085] transition-colors" />
                     </div>
                     <span className="text-4xl font-black text-[#7BBDE8]/40 group-hover:text-white/50 transition-colors uppercase tracking-tighter">
                       {item.step}
@@ -80,7 +80,7 @@ export function HowItWorksSection() {
                     {item.description}
                   </p>
 
-                  <div className="flex flex-wrap gap-2 pt-4 border-t border-[rgba(21,86,91,0.25)]">
+                  <div className="flex flex-wrap gap-2 pt-4 border-t border-[rgba(22,160,133,0.20)]">
                     {item.highlights.map((h, idx) => (
                       <div key={idx} className="flex items-center gap-2 pr-2">
                         <div className="h-1 w-1 rounded-full bg-[#16A085]" />

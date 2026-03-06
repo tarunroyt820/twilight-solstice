@@ -190,9 +190,9 @@ export function PublicProfile() {
 
                     {/* AI Endorsement */}
                     <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-primary to-accent shadow-2xl shadow-primary/20 space-y-6 relative overflow-hidden group">
-                        <div className="absolute -top-10 -right-10 h-32 w-32 bg-white/10 rounded-full blur-[40px] group-hover:scale-150 transition-transform duration-1000" />
+                        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full blur-[40px] group-hover:scale-150 transition-transform duration-1000" style={{ background: 'rgba(22,160,133,0.15)' }} />
                         <div className="relative z-10 flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-md">
+                            <div className="h-12 w-12 rounded-2xl flex items-center justify-center backdrop-blur-md" style={{ background: 'rgba(255,255,255,0.2)' }}>
                                 <Sparkles className="h-6 w-6 text-white" />
                             </div>
                             <h4 className="font-black text-xl text-white tracking-tight">AI Endorsed</h4>

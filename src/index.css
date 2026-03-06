@@ -1,3 +1,40 @@
+:root {
+  /* ═══════════════════════════════
+     NEXTARO DESIGN SYSTEM TOKENS
+     All pages must use these only!
+  ═══════════════════════════════ */
+
+  /* Backgrounds */
+  --bg-primary: #140C30;
+  --bg-secondary: #14253E;
+  --bg-card: rgba(20, 37, 62, 0.60);
+  --bg-card-solid: rgba(20, 37, 62, 0.95);
+  --bg-navbar: rgba(20, 12, 48, 0.85);
+
+  /* Accent - Teal */
+  --color-teal: #16A085;
+  --color-teal-hover: #168777;
+  --color-teal-light: rgba(22, 160, 133, 0.15);
+  --color-teal-glow: rgba(22, 160, 133, 0.25);
+  --color-teal-border: rgba(22, 160, 133, 0.30);
+
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-secondary: #BDD8E9;
+  --text-muted: rgba(189, 216, 233, 0.70);
+  --text-accent: #16A085;
+
+  /* Borders */
+  --border-subtle: rgba(21, 86, 91, 0.25);
+  --border-glow: rgba(22, 160, 133, 0.30);
+  --border-card: rgba(22, 160, 133, 0.20);
+
+  /* Shadows & Glows */
+  --shadow-teal: 0 0 40px rgba(22, 160, 133, 0.15);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.40);
+  --glow-teal: 0 0 20px rgba(22, 160, 133, 0.40);
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -93,16 +130,16 @@
 
   /* Card styles */
   .abyss-card {
-    background-color: #14253E;
-    border: 1px solid rgba(21, 86, 91, 0.25);
+    background-color: rgba(20, 37, 62, 0.60);
+    border: 1px solid rgba(22, 160, 133, 0.20);
     border-radius: 1.5rem;
     backdrop-filter: blur(16px);
     transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   }
   .abyss-card:hover {
-    border-color: rgba(22, 160, 133, 0.35);
+    border-color: rgba(22, 160, 133, 0.50);
     transform: translateY(-6px);
-    box-shadow: 0 24px 60px rgba(22, 160, 133, 0.12);
+    box-shadow: 0 0 30px rgba(22, 160, 133, 0.15);
   }
 
   /* Section backgrounds */

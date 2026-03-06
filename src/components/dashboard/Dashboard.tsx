@@ -73,16 +73,16 @@ export function Dashboard() {
 
   if (!profile) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <div className="flex h-screen w-full items-center justify-center" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" style={{ borderColor: 'var(--color-teal)', borderTopColor: 'transparent' }}></div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div className="flex min-h-screen transition-colors duration-300" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       {/* Sidebar - Desktop */}
-      <aside className="hidden w-72 flex-col border-r border-border/40 bg-card/50 backdrop-blur-xl lg:flex sticky top-0 h-screen">
+      <aside className="hidden w-72 flex-col border-r border-[rgba(21,86,91,0.25)] bg-[rgba(13,17,40,0.95)] backdrop-blur-xl lg:flex sticky top-0 h-screen">
         <div className="flex h-32 items-center px-8">
           <Logo size="lg" />
         </div>
@@ -93,12 +93,7 @@ export function Dashboard() {
               <NavLink
                 key={item.id}
                 to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold transition-all duration-200 group ${isActive
-                    ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02]"
-                    : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                  }`
-                }
+                className={({ isActive }) => `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 group hover:scale-[1.02] ${isActive ? 'bg-[#16A085] text-white' : 'text-secondary hover:bg-[rgba(22,160,133,0.15)]'}`}
               >
                 <item.icon className={`h-5 w-5 transition-transform duration-200 group-hover:scale-110`} />
                 {item.label}
@@ -109,7 +104,16 @@ export function Dashboard() {
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="group mt-auto flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive"
+            className="group mt-auto flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold transition-all"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(220,38,38,0.1)';
+              e.currentTarget.style.color = '#dc2626';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
           >
             <LogOut className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
             Sign Out
@@ -120,21 +124,26 @@ export function Dashboard() {
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity lg:hidden"
+          className="fixed inset-0 z-40 backdrop-blur-sm transition-opacity lg:hidden"
+          style={{ background: 'rgba(20,12,48,0.6)' }}
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar - Mobile */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-80 transform bg-card/95 backdrop-blur-2xl transition-transform duration-300 ease-out lg:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 w-80 transform backdrop-blur-2xl transition-transform duration-300 ease-out lg:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
+        style={{ background: 'rgba(20,37,62,0.95)' }}
       >
-        <div className="flex h-32 items-center justify-between px-8 border-b border-border/40">
+        <div className="flex h-32 items-center justify-between px-8" style={{ borderBottomWidth: '1px', borderColor: 'var(--border-subtle)' }}>
           <Logo size="lg" />
           <button
             onClick={() => setSidebarOpen(false)}
-            className="rounded-xl p-2 text-muted-foreground hover:bg-muted"
+            className="rounded-xl p-2 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-teal-light)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
             <X className="h-6 w-6" />
           </button>
@@ -145,12 +154,22 @@ export function Dashboard() {
               key={item.id}
               to={item.path}
               onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-2xl px-4 py-4 text-sm font-semibold transition-all ${isActive
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                  : "text-muted-foreground hover:bg-muted"
-                }`
-              }
+              style={({ isActive }) => ({
+                background: isActive ? 'var(--color-teal)' : 'transparent',
+                color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
+                boxShadow: isActive ? 'var(--glow-teal)' : 'none',
+              })}
+              className="flex items-center gap-3 rounded-2xl px-4 py-4 text-sm font-semibold transition-all"
+              onMouseEnter={(e) => {
+                if (!e.currentTarget.getAttribute('aria-current')) {
+                  e.currentTarget.style.background = 'var(--color-teal-light)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!e.currentTarget.getAttribute('aria-current')) {
+                  e.currentTarget.style.background = 'transparent';
+                }
+              }}
             >
               <item.icon className="h-5 w-5" />
               {item.label}
@@ -159,7 +178,16 @@ export function Dashboard() {
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="mt-6 flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-4 font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            className="mt-6 flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-4 font-semibold transition-all"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(220,38,38,0.1)';
+              e.currentTarget.style.color = '#dc2626';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
           >
             <LogOut className="h-5 w-5" />
             Sign Out
@@ -170,23 +198,32 @@ export function Dashboard() {
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden relative">
         {/* Background Decorative Blurs */}
-        <div className="absolute top-0 right-0 -z-10 h-[500px] w-[500px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -z-10 h-[500px] w-[500px] rounded-full bg-accent/5 blur-[120px] pointer-events-none" />
+        <div className="absolute top-0 right-0 -z-10 h-[500px] w-[500px] rounded-full blur-[120px] pointer-events-none" style={{ background: 'rgba(22,160,133,0.05)' }} />
+        <div className="absolute bottom-0 left-0 -z-10 h-[500px] w-[500px] rounded-full blur-[120px] pointer-events-none" style={{ background: 'rgba(22,160,133,0.03)' }} />
 
         {/* Top Bar */}
-        <header className="flex h-24 items-center justify-between border-b border-border/40 bg-background/60 backdrop-blur-xl px-6 lg:px-12 shrink-0 z-10 sticky top-0">
+        <header className="flex h-24 items-center justify-between backdrop-blur-xl px-6 lg:px-12 shrink-0 z-10 sticky top-0" style={{ borderBottomWidth: '1px', borderColor: 'var(--border-subtle)', background: 'rgba(20,12,48,0.85)' }}>
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="rounded-2xl bg-muted/50 p-3 text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden transition-colors"
+              className="rounded-2xl p-3 lg:hidden transition-colors"
+              style={{ background: 'var(--color-teal-light)', color: 'var(--text-secondary)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--color-teal-glow)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--color-teal-light)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }}
             >
               <Menu className="h-6 w-6" />
             </button>
             <div className="space-y-0.5">
-              <h1 className="text-2xl font-extrabold tracking-tight text-foreground lg:text-3xl">
+              <h1 className="text-2xl font-extrabold tracking-tight lg:text-3xl" style={{ color: 'var(--text-primary)' }}>
                 Hey, {profile?.fullName?.split(" ")[0] || "there"} 👋
               </h1>
-              <p className="hidden text-sm font-medium text-muted-foreground sm:block">
+              <p className="hidden text-sm font-medium sm:block" style={{ color: 'var(--text-secondary)' }}>
                 Here's what's happening with your career today.
               </p>
             </div>
@@ -194,20 +231,20 @@ export function Dashboard() {
 
           <div className="flex items-center gap-5">
             <div className="hidden sm:flex flex-col items-end">
-              <p className="text-sm font-bold text-foreground">{profile?.fullName}</p>
-              <p className="text-xs font-semibold text-primary">{profile?.jobTitle || "Nextaro Explorer"}</p>
+              <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{profile?.fullName}</p>
+              <p className="text-xs font-semibold" style={{ color: 'var(--color-teal)' }}>{profile?.jobTitle || "Nextaro Explorer"}</p>
             </div>
             <div className="group relative cursor-pointer">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-lg font-bold text-white shadow-xl shadow-primary/20 transition-transform group-hover:scale-110">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-xl transition-transform group-hover:scale-110" style={{ background: 'linear-gradient(to bottom right, var(--color-teal), var(--color-teal-hover))', boxShadow: 'var(--glow-teal)' }}>
                 {getInitials(profile?.fullName || "")}
               </div>
-              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-background bg-green-500 shadow-sm" />
+              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 shadow-sm" style={{ borderColor: 'var(--bg-primary)', background: 'var(--color-teal)' }} />
             </div>
           </div>
         </header>
 
         {/* Dashboard Content */}
-        <main className="flex-1 overflow-auto p-6 lg:p-12 animate-in fade-in duration-700">
+        <main className="flex-1 overflow-auto bg-[#140C30] p-4 md:p-6 lg:p-8 animate-in fade-in duration-700">
           <div className="max-w-7xl mx-auto w-full">
             <Routes>
               <Route path="overview" element={<OverviewShell />} />

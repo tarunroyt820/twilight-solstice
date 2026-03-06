@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/common/Logo";
@@ -33,7 +32,7 @@ export function Navbar() {
         </div>
 
         {/* Desktop Navigation Links - Refined Hierarchy */}
-        <div className="hidden items-center bg-[rgba(22,160,133,0.08)] backdrop-blur-2xl px-1.5 py-1.5 rounded-full border border-[rgba(22,160,133,0.2)] gap-1 md:flex">
+        <div className="hidden lg:flex items-center bg-[rgba(22,160,133,0.08)] backdrop-blur-2xl px-1.5 py-1.5 rounded-full border border-[rgba(22,160,133,0.2)] gap-1">
           {navLinks.map((link) => (
             <a
               key={link.label}
@@ -46,7 +45,7 @@ export function Navbar() {
         </div>
 
         {/* Desktop CTAs - Premium Styling */}
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden lg:flex items-center gap-6">
           <Button
             variant="ghost"
             onClick={() => navigate("/login")}
@@ -63,56 +62,72 @@ export function Navbar() {
         </div>
 
         {/* Mobile Toggle */}
+        {/* Hamburger Button - Mobile Only */}
         <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-2xl p-4 text-[#BDD8E9] bg-[rgba(22,160,133,0.1)] border border-[rgba(21,86,91,0.25)] hover:bg-[rgba(22,160,133,0.15)] md:hidden transition-all"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          onClick={() => setMobileMenuOpen(true)}
+          className="lg:hidden flex flex-col justify-center items-center w-10 h-10 rounded-xl border border-[rgba(22,160,133,0.30)] bg-[rgba(20,37,62,0.60)] gap-1.5 hover:border-[#16A085] transition-all"
+          aria-label="Open menu"
         >
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          <span className="w-5 h-0.5 bg-[#BDD8E9] rounded-full" />
+          <span className="w-5 h-0.5 bg-[#BDD8E9] rounded-full" />
+          <span className="w-3 h-0.5 bg-[#BDD8E9] rounded-full self-end" />
         </button>
       </nav>
 
-      {/* Mobile Menu Overlay */}
+      {/* Dark Overlay */}
       {mobileMenuOpen && (
-        <div className="absolute top-20 left-0 right-0 p-6 animate-in fade-in slide-in-from-top-4 duration-500 md:hidden z-50">
-          <div className="rounded-[3rem] border border-[rgba(21,86,91,0.25)] bg-[rgba(20,12,48,0.95)] backdrop-blur-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] p-10 space-y-10">
-            <div className="flex flex-col gap-6">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-2xl font-black uppercase tracking-tighter text-[#BDD8E9] hover:text-white transition-all flex items-center justify-between"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.label}
-                  <ChevronRight className="h-5 w-5 opacity-30" />
-                </a>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 gap-4 pt-6 border-t border-[rgba(21,86,91,0.25)]">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  navigate("/login");
-                  setMobileMenuOpen(false);
-                }}
-                className="rounded-3xl h-16 font-black uppercase tracking-widest text-xs border-[rgba(22,160,133,0.25)] bg-[rgba(22,160,133,0.08)] text-white hover:bg-[rgba(22,160,133,0.15)]"
-              >
-                Sign In
-              </Button>
-              <Button
-                onClick={() => {
-                  navigate("/signup");
-                  setMobileMenuOpen(false);
-                }}
-                className="rounded-3xl h-16 font-black uppercase tracking-widest text-xs bg-[#16A085] text-white hover:bg-[#168777] glow-teal shadow-2xl"
-              >
-                Get Started
-              </Button>
-            </div>
-          </div>
-        </div>
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
       )}
+
+      {/* Side Drawer */}
+      <div className={`fixed top-0 right-0 h-full w-72 bg-[#140C30] border-l border-[rgba(22,160,133,0.25)] z-50 lg:hidden flex flex-col transform transition-transform duration-300 ease-in-out shadow-[-20px_0_60px_rgba(0,0,0,0.5)] ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between p-6 border-b border-[rgba(22,160,133,0.15)]">
+          <Logo size="sm" />
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="w-9 h-9 rounded-xl border border-[rgba(22,160,133,0.30)] bg-[rgba(20,37,62,0.80)] flex items-center justify-center hover:border-[#16A085] hover:bg-[rgba(22,160,133,0.15)] transition-all text-[#BDD8E9]"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Drawer Nav Links */}
+        <nav className="flex flex-col p-6 gap-2 flex-1">
+          {['CAPABILITIES', 'PROTOCOL', 'PROOF', 'EXCHANGE'].map((item) => (
+            <a
+              key={item}
+              href={`#${item.toLowerCase()}`}
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-4 py-3 rounded-xl text-[#BDD8E9] font-bold text-sm tracking-widest hover:bg-[rgba(22,160,133,0.10)] hover:text-white hover:border-l-2 hover:border-[#16A085] transition-all duration-200"
+            >
+              {item}
+            </a>
+          ))}
+        </nav>
+
+        {/* Drawer Bottom Buttons */}
+        <div className="p-6 border-t border-[rgba(22,160,133,0.15)] flex flex-col gap-3">
+          <a
+            href="/login"
+            onClick={() => setMobileMenuOpen(false)}
+            className="w-full py-3 rounded-xl text-center text-[#BDD8E9] font-bold text-sm tracking-widest border border-[rgba(22,160,133,0.30)] hover:border-[#16A085] hover:bg-[rgba(22,160,133,0.10)] transition-all"
+          >
+            LOGIN
+          </a>
+          <a
+            href="/signup"
+            onClick={() => setMobileMenuOpen(false)}
+            className="w-full py-3 rounded-xl text-center text-white font-bold text-sm tracking-widest bg-[#16A085] hover:bg-[#168777] transition-all"
+          >
+            SIGN UP
+          </a>
+        </div>
+      </div>
     </header>
   );
 }

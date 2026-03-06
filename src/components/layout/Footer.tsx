@@ -35,16 +35,16 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-[#14253E] border-t border-[rgba(21,86,91,0.25)]">
-      <div className="mx-auto max-w-7xl px-8 py-24 lg:px-12">
-        <div className="grid gap-16 lg:grid-cols-6 items-start">
+    <footer className="bg-[#140C30] border-t border-[rgba(22,160,133,0.20)]">
+      <div className="mx-auto max-w-7xl px-4 md:px-8 lg:px-16 py-12 md:py-16 lg:py-24">
+        <div className="grid gap-16 grid-cols-1 lg:grid-cols-6 items-start">
           {/* Brand Column */}
-          <div className="lg:col-span-2 space-y-10">
+          <div className="lg:col-span-2 space-y-10 w-full">
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4 group cursor-pointer">
                 <div className="relative">
-                  <Logo size="lg" className="transition-transform duration-500 group-hover:scale-110" />
-                  <div className="absolute -inset-4 bg-[rgba(22,160,133,0.2)] blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Logo size="md" className="transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_0_12px_rgba(22,160,133,0.6)]" />
+                  <div className="absolute -inset-4 bg-[rgba(22,160,133,0.15)] blur-xl rounded-full opacity-40 group-hover:opacity-100 transition-all duration-500" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-2xl font-black tracking-tighter text-white leading-none">NEXTARO</span>
@@ -74,7 +74,7 @@ export function Footer() {
           </div>
 
           {/* Links Grid */}
-          <div className="grid grid-cols-2 gap-12 sm:grid-cols-4 lg:col-span-4 lg:pt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:col-span-4 lg:pt-8">
             <div className="space-y-6">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">Core Platform</h3>
               <ul className="space-y-4">
@@ -127,7 +127,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Banner */}
-        <div className="mt-24 pt-12 border-t border-[rgba(21,86,91,0.25)] flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="mt-16 md:mt-20 lg:mt-24 pt-8 md:pt-10 lg:pt-12 border-t border-[rgba(22,160,133,0.20)] flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-[#7BBDE8]">
             &copy; {new Date().getFullYear()} Nextaro Intelligence Protocol. Secure Build 8142.
           </p>

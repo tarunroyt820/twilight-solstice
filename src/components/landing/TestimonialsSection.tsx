@@ -33,7 +33,7 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section id="testimonials" className="section-alt relative px-4 py-32 sm:px-6 lg:px-8 overflow-hidden">
+    <section id="testimonials" className="section-alt relative px-4 md:px-8 lg:px-16 py-12 md:py-16 lg:py-24 overflow-hidden">
       <div className="mx-auto max-w-7xl relative">
         {/* Section Header */}
         <div className="flex flex-col items-center text-center space-y-6 mb-24">
@@ -41,7 +41,7 @@ export function TestimonialsSection() {
             <Sparkles className="h-3 w-3" />
             Social Pulse
           </div>
-          <h2 className="text-white text-4xl md:text-6xl font-black tracking-tight leading-tight">
+          <h2 className="text-white text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
             Verified Career <span className="text-teal-gradient">Breakthroughs.</span>
           </h2>
           <p className="text-[#BDD8E9] max-w-xl text-lg md:text-xl font-medium leading-relaxed">
@@ -50,7 +50,7 @@ export function TestimonialsSection() {
         </div>
 
         {/* Testimonials Grid */}
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((item, i) => (
             <Card
               key={i}
@@ -67,7 +67,7 @@ export function TestimonialsSection() {
                       />
                     ))}
                   </div>
-                  <div className="h-10 w-10 rounded-2xl bg-[rgba(22,160,133,0.1)] flex items-center justify-center text-[#BDD8E9] group-hover:text-white transition-colors">
+                <div className="h-10 w-10 rounded-2xl bg-[rgba(22,160,133,0.15)] flex items-center justify-center text-[#BDD8E9] group-hover:text-white transition-colors">
                     <Quote className="h-5 w-5" />
                   </div>
                 </div>
@@ -83,7 +83,7 @@ export function TestimonialsSection() {
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="h-16 w-16 rounded-2xl object-cover ring-4 ring-[rgba(22,160,133,0.2)]"
+                      className="h-16 w-16 rounded-2xl object-cover ring-4 ring-[rgba(22,160,133,0.30)]"
                     />
                     {item.verified && (
                       <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-[#16A085] text-white rounded-full flex items-center justify-center shadow-lg border-2 border-[#14253E]">
