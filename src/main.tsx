@@ -4,14 +4,10 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 
-import { ThemeProvider } from './components/layout/ThemeProvider';
-
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="nextro-theme">
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
-        </ThemeProvider>
+        <BrowserRouter>
+            <App />
+        </BrowserRouter>
     </React.StrictMode>,
 );

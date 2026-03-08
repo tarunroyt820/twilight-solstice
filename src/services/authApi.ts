@@ -4,6 +4,7 @@ const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/
 
 export interface AuthResponse {
     token: string;
+    refreshToken?: string;
     user: {
         id: string;
         fullName: string;
@@ -21,7 +22,16 @@ export const login = async (email: string, password: string): Promise<AuthRespon
             throw new Error("Invalid server response: No token received");
         }
 
-        localStorage.setItem("nextro_token", response.data.token);
+        localStorage.setItem(
+            "nextro_token",
+            response.data.token
+        );
+        if (response.data.refreshToken) {
+            localStorage.setItem(
+                "nextro_refresh_token",
+                response.data.refreshToken
+            );
+        }
         return response.data;
     } catch (error: any) {
         throw error;
@@ -36,7 +46,16 @@ export const signup = async (fullName: string, email: string, password: string):
             throw new Error("Invalid server response: No token received");
         }
 
-        localStorage.setItem("nextro_token", response.data.token);
+        localStorage.setItem(
+            "nextro_token",
+            response.data.token
+        );
+        if (response.data.refreshToken) {
+            localStorage.setItem(
+                "nextro_refresh_token",
+                response.data.refreshToken
+            );
+        }
         return response.data;
     } catch (error: any) {
         throw error;
