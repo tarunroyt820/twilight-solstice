@@ -2,27 +2,46 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+
+// const xss = require('xss-clean');
 const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/authRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const resumeRoutes = require('./routes/resumeRoutes');
 
 const app = express();
 
 // Security Middleware
+
 app.use(helmet());
 
-// CORS — only allow your frontend
+// XSS Attack Prevention
+// app.use(xss());
+
+// CORS — allow localhost dev ports and the configured frontend URL
 const allowedOrigins = [
-    'http://localhost:5173',
+    process.env.FRONTEND_URL,
     'http://localhost:3000',
-    process.env.FRONTEND_URL
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173'
 ].filter(Boolean);
 
 app.use(cors({
     origin: function(origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin) {
+            callback(null, true);
+            return;
+        }
+
+        const isAllowed = allowedOrigins.includes(origin)
+            || /^http:\/\/localhost:\d+$/.test(origin)
+            || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin);
+
+        if (isAllowed) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
@@ -61,8 +80,10 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/resume', resumeRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

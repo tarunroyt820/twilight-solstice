@@ -28,8 +28,10 @@ export function AuthPage({ mode }: AuthPageProps) {
 
     try {
       if (mode === "signup") {
-        await signup(fullName, email, password);
-        toast.success("Protocol Initialized: Welcome to Nextaro.");
+        const response = await signup(fullName, email, password);
+        toast.success(response.message || "Account created. Check your inbox for the OTP.");
+        navigate("/verify-email", { replace: true, state: { verificationEmail: email } });
+        return;
       } else {
         await login(email, password);
         toast.success("Identity Verified: Welcome Back.");
@@ -49,7 +51,7 @@ export function AuthPage({ mode }: AuthPageProps) {
       const errorMessage = error.response?.data?.message || error.message || "Authentication Failed";
 
       if (!error.response && !error.message?.includes("Token")) {
-        toast.error("Network Error: Unable to reach Nextaro servers.");
+        toast.error("Network or CORS error: check that the backend is running and the frontend URL is allowed.");
       } else if (errorMessage.includes("User already exists")) {
         toast.error("Identity Conflict: User already exists.");
       } else {
@@ -78,7 +80,7 @@ export function AuthPage({ mode }: AuthPageProps) {
         >
           {/* Brand Header */}
           <div className="flex items-center gap-3">
-            <Logo size="md" />
+            <Logo size="md" onClick={() => navigate("/")} />
             <span className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Nextaro</span>
           </div>
 
@@ -166,7 +168,7 @@ export function AuthPage({ mode }: AuthPageProps) {
         <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 lg:p-4 xl:p-8 relative">
           {/* Mobile Logo - shows on mobile only */}
           <div className="flex lg:hidden items-center justify-center mb-6">
-            <Logo size="md" />
+                  <Logo size="md" onClick={() => navigate("/")} />
           </div>
 
           <motion.div
@@ -272,6 +274,15 @@ export function AuthPage({ mode }: AuthPageProps) {
                     {isLogin ? "Sign Up" : "Login"}
                   </Link>
                 </p>
+                {isLogin && (
+                  <Link
+                    to="/forgot-password"
+                    className="mt-4 inline-block text-sm font-bold underline underline-offset-4 decoration-2 transition-colors"
+                    style={{ color: 'var(--color-teal)' }}
+                  >
+                    Forgot password?
+                  </Link>
+                )}
               </div>
 
               {/* Footer Locks */}

@@ -7,6 +7,8 @@ const aiService = require('../services/ai/ai.service');
  * @route POST /api/ai/ask
  * @access Private
  */
+
+// Handle user question and AI response
 exports.askAI = async (req, res) => {
     try {
         const { question } = req.body;
@@ -32,7 +34,7 @@ exports.askAI = async (req, res) => {
         // 3. Construct the personalized prompt
         const prompt = `
             The following is the professional profile of a student/professional using Nextro Career Pathfinder.
-            
+        
             USER PROFILE CONTEXT:
             - Full Name: ${user.fullName}
             - Current Job Title: ${user.jobTitle || "Student/Aspiring Professional"}
@@ -40,52 +42,58 @@ exports.askAI = async (req, res) => {
             - Career Goal: ${user.careerGoal || "Not specified yet"}
             - Skills: ${user.skills && user.skills.length > 0 ? user.skills.join(", ") : "None listed yet"}
             - Education: ${user.education.degree || "N/A"} from ${user.education.college || "N/A"} (Graduation: ${user.education.graduationYear || "N/A"})
-            
+        
             INSTRUCTIONS:
             - Provide clear, personalized career guidance based strictly on the profile provided.
             - If the user has a specific career goal, suggest actionable steps to reach it.
             - Be encouraging and focus on skill growth.
             - Use Markdown for response formatting (bullet points, bold text).
-            
+        
             USER QUESTION:
             "${question}"
-            
+        
             AI RESPONSE:
         `;
 
         // 4. Get response from the configured AI provider
-        const answer = await aiService.getAIResponse(prompt);
+        try {
+            const result = await aiService.getAIResponse(prompt);
+            const answer = result && result.text ? result.text : String(result);
 
-        // 5. Save AI Response to DB
-        await Message.create({
-            userId,
-            role: 'assistant',
-            content: answer
-        });
+            // 5. Save AI Response to DB
+            await Message.create({
+                userId,
+                role: 'assistant',
+                content: answer
+            });
 
-        res.json({
-            answer,
-            success: true
-        });
+            // 6. Respond
+            res.json({
+                answer,
+                success: true
+            });
+        } catch (error) {
+            console.error("AI Controller Error:", error);
+            res.status(error.code === 'AI_NOT_CONFIGURED' ? 503 : 500).json({
+                success: false,
+                code: error.code || "AI_FAILED",
+                message: error.message || "AI service temporarily unavailable"
+            });
+        }
     } catch (error) {
-        console.error("AI Controller Error:", error);
+        console.error("askAI Error:", error);
         res.status(500).json({
-            message: "AI service temporarily unavailable",
+            message: "Failed to process AI request",
             success: false
         });
     }
 };
 
-/**
- * Fetch chat history for the logged-in user
- * @route GET /api/ai/history
- * @access Private
- */
+// Fetch chat history for the user
 exports.getHistory = async (req, res) => {
     try {
         const userId = req.user.id;
         const messages = await Message.find({ userId }).sort({ timestamp: 1 });
-
         res.json({
             success: true,
             messages

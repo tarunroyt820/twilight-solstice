@@ -1,56 +1,110 @@
 const groqService = require("./groq.service");
-const geminiService = require("./gemini.service");
-const openaiService = require("./openai.service");
 const deepseekService = require("./deepseek.service");
+const nvidiaService = require("./nvidia.service");
 
-// Priority order: DeepSeek -> Groq -> Gemini -> OpenAI
+let validateProviderConfig;
+try {
+    ({ validateProviderConfig } = require("./aiConfig"));
+} catch (_error) {
+    // Demo-safe fallback validator if aiConfig helper is not present yet.
+    validateProviderConfig = (provider) => {
+        const keyByProvider = {
+            groq: "GROQ_API_KEY",
+            // gemini: "GEMINI_API_KEY",
+            deepseek: "DEEPSEEK_API_KEY",
+            nvidia: "NVIDIA_API_KEY"
+        };
+
+        const keyName = keyByProvider[provider];
+        if (!keyName) {
+            return {
+                valid: false,
+                code: "AI_PROVIDER_UNSUPPORTED",
+                message: `Unsupported AI provider: ${provider}`
+            };
+        }
+
+        const value = process.env[keyName];
+        if (!value || value.startsWith("REPLACE_")) {
+            return {
+                valid: false,
+                code: "AI_NOT_CONFIGURED",
+                message: `${keyName} is missing for provider ${provider}`
+            };
+        }
+
+        return { valid: true };
+    };
+}
+
+// Priority order: DeepSeek -> NVIDIA -> Groq
 const providers = [
     { name: "deepseek", service: deepseekService },
-    { name: "groq", service: groqService },
-    { name: "gemini", service: geminiService },
-    { name: "openai", service: openaiService }
+    { name: "nvidia", service: nvidiaService },
+    { name: "groq", service: groqService }
 ];
 
 /**
- * Main AI Gateway with Fallback Logic
- * If the selected provider fails, attempts fallback in priority order.
+ * Main AI Gateway with optional fallback behavior.
+ * Returns a structured result so callers can expose providerUsed safely.
  */
 const getAIResponse = async (prompt) => {
     const selectedProvider = (process.env.AI_PROVIDER || "groq").toLowerCase();
-    let lastError = null;
+    const enableFallback = (process.env.AI_ENABLE_FALLBACK || "false").toLowerCase() === "true";
 
-    // 1. Try Selected Provider First
-    const primaryIndex = providers.findIndex(p => p.name === selectedProvider);
-    if (primaryIndex !== -1) {
-        try {
-            console.log(`AI Service: Attempting primary provider "${selectedProvider}"`);
-            return await providers[primaryIndex].service.generateResponse(prompt);
-        } catch (error) {
-            console.warn(`AI Service: Primary provider "${selectedProvider}" failed. Error: ${error.message}`);
-            lastError = error;
-        }
-    } else {
-        console.warn(`AI Service: Selected provider "${selectedProvider}" is not supported. Falling back.`);
+    const primaryProvider = providers.find((p) => p.name === selectedProvider);
+    if (!primaryProvider) {
+        const unsupportedError = new Error(`Selected provider "${selectedProvider}" is not supported`);
+        unsupportedError.code = "AI_PROVIDER_UNSUPPORTED";
+        throw unsupportedError;
     }
 
-    // 2. Try Fallback Chain (Priority Order)
-    console.log("AI Service: Starting fallback attempts...");
+    const primaryValidation = validateProviderConfig(selectedProvider);
+    if (!primaryValidation.valid) {
+        const configError = new Error(primaryValidation.message);
+        configError.code = primaryValidation.code;
+        throw configError;
+    }
+
+    try {
+        const text = await primaryProvider.service.generateResponse(prompt);
+        return { providerUsed: selectedProvider, text };
+    } catch (_error) {
+        if (!enableFallback) {
+            const providerError = new Error("AI provider unavailable");
+            providerError.code = "AI_PROVIDER_UNAVAILABLE";
+            throw providerError;
+        }
+    }
+
+    // Optional fallback chain: only runs when AI_ENABLE_FALLBACK=true.
     for (const provider of providers) {
-        // Skip if we already tried this provider as primary
-        if (provider.name === selectedProvider) continue;
+        if (provider.name === selectedProvider) {
+            continue;
+        }
+
+        const validation = validateProviderConfig(provider.name);
+        if (!validation.valid) {
+            // Skip intentionally unconfigured providers to avoid noisy failures.
+            if (validation.code === "AI_NOT_CONFIGURED") {
+                continue;
+            }
+
+            // For other validation failures, skip and continue fallback attempts.
+            continue;
+        }
 
         try {
-            console.log(`AI Service: Attempting fallback provider "${provider.name}"`);
-            return await provider.service.generateResponse(prompt);
-        } catch (error) {
-            console.warn(`AI Service: Fallback provider "${provider.name}" failed. Error: ${error.message}`);
-            lastError = error;
+            const text = await provider.service.generateResponse(prompt);
+            return { providerUsed: provider.name, text };
+        } catch (_error) {
+            // Continue trying remaining configured providers.
         }
     }
 
-    // 3. All attempts failed
-    console.error("AI Service: All providers failed.");
-    throw new Error("AI service temporarily unavailable");
+    const providerError = new Error("AI provider unavailable");
+    providerError.code = "AI_PROVIDER_UNAVAILABLE";
+    throw providerError;
 };
 
 module.exports = { getAIResponse };

@@ -10,7 +10,11 @@ import {
   Settings,
   User,
   X,
+  FileText,
+  TrendingUp
 } from "lucide-react";
+import { ResumeUpload } from "./ResumeUpload";
+import { SkillGapShell } from "./SkillGapShell";
 import { useState, useEffect } from "react";
 import { Routes, Route, NavLink, useNavigate, Navigate, Link } from "react-router-dom";
 import { OverviewShell } from "./OverviewShell";
@@ -28,9 +32,11 @@ import { logout } from "@/services/authApi";
 const navItems = [
   { icon: Home, label: "Overview", id: "overview", path: "/dashboard/overview" },
   { icon: Compass, label: "Career Path", id: "career", path: "/dashboard/career" },
+  { icon: TrendingUp, label: "Skill Gap", id: "skillgap", path: "/dashboard/skillgap" },
   { icon: BookOpen, label: "Learning", id: "learning", path: "/dashboard/learning" },
   { icon: RefreshCw, label: "Skill Exchange", id: "skills", path: "/dashboard/skills" },
   { icon: MessageSquare, label: "AI Assistant", id: "assistant", path: "/dashboard/assistant" },
+  { icon: FileText, label: "My Resume", id: "resume", path: "/dashboard/resume" },
   { icon: Settings, label: "Settings", id: "settings", path: "/dashboard/settings" },
   { icon: User, label: "Profile", id: "profile", path: "/dashboard/profile" },
 ];
@@ -60,6 +66,13 @@ export function Dashboard() {
     navigate("/login");
   };
 
+  const handleDashboardLogoDoubleClick = () => {
+    const confirmed = window.confirm("Do you want to sign out?");
+    if (!confirmed) return;
+
+    handleLogout();
+  };
+
   // Helper to get initials
   const getInitials = (name: string) => {
     if (!name) return "JD";
@@ -84,7 +97,7 @@ export function Dashboard() {
       {/* Sidebar - Desktop */}
       <aside className="hidden w-72 flex-col border-r border-[rgba(21,86,91,0.25)] bg-[rgba(13,17,40,0.95)] backdrop-blur-xl lg:flex sticky top-0 h-screen">
         <div className="flex h-32 items-center px-8">
-          <Logo size="lg" />
+          <Logo size="lg" onClick={() => {}} onDoubleClick={handleDashboardLogoDoubleClick} />
         </div>
 
         <div className="flex flex-1 flex-col justify-between p-6">
@@ -93,7 +106,12 @@ export function Dashboard() {
               <NavLink
                 key={item.id}
                 to={item.path}
-                className={({ isActive }) => `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 group hover:scale-[1.02] ${isActive ? 'bg-[#16A085] text-white' : 'text-secondary hover:bg-[rgba(22,160,133,0.15)]'}`}
+                style={({ isActive }) => ({
+                  background: isActive ? '#16A085' : 'transparent',
+                  color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
+                  boxShadow: isActive ? 'var(--glow-teal)' : 'none',
+                })}
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 group hover:scale-[1.02] hover:bg-[rgba(22,160,133,0.15)]"
               >
                 <item.icon className={`h-5 w-5 transition-transform duration-200 group-hover:scale-110`} />
                 {item.label}
@@ -132,12 +150,15 @@ export function Dashboard() {
 
       {/* Sidebar - Mobile */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-80 transform backdrop-blur-2xl transition-transform duration-300 ease-out lg:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300 ease-out lg:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
-        style={{ background: 'rgba(20,37,62,0.95)' }}
+        style={{
+          background: 'var(--bg-secondary)',
+          borderRight: '1px solid var(--border-subtle)'
+        }}
       >
         <div className="flex h-32 items-center justify-between px-8" style={{ borderBottomWidth: '1px', borderColor: 'var(--border-subtle)' }}>
-          <Logo size="lg" />
+          <Logo size="lg" onClick={() => {}} onDoubleClick={handleDashboardLogoDoubleClick} />
           <button
             onClick={() => setSidebarOpen(false)}
             className="rounded-xl p-2 transition-colors"
@@ -196,7 +217,7 @@ export function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden relative">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden relative">
         {/* Background Decorative Blurs */}
         <div className="absolute top-0 right-0 -z-10 h-[500px] w-[500px] rounded-full blur-[120px] pointer-events-none" style={{ background: 'rgba(22,160,133,0.05)' }} />
         <div className="absolute bottom-0 left-0 -z-10 h-[500px] w-[500px] rounded-full blur-[120px] pointer-events-none" style={{ background: 'rgba(22,160,133,0.03)' }} />
@@ -247,14 +268,16 @@ export function Dashboard() {
         <main className="flex-1 overflow-auto bg-[#140C30] p-4 md:p-6 lg:p-8 animate-in fade-in duration-700">
           <div className="max-w-7xl mx-auto w-full">
             <Routes>
-              <Route path="overview" element={<OverviewShell />} />
-              <Route path="career" element={<CareerPathShell />} />
-              <Route path="learning" element={<LearningShell />} />
-              <Route path="skills" element={<SkillExchangeShell />} />
-              <Route path="assistant" element={<AIAssistantShell />} />
-              <Route path="settings" element={<SettingsShell />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="/" element={<Navigate to="overview" replace />} />
+                <Route path="overview" element={<OverviewShell />} />
+                <Route path="career" element={<CareerPathShell />} />
+                <Route path="skillgap" element={<SkillGapShell />} />
+                <Route path="learning" element={<LearningShell />} />
+                <Route path="skills" element={<SkillExchangeShell />} />
+                <Route path="assistant" element={<AIAssistantShell />} />
+                <Route path="resume" element={<ResumeUpload />} />
+                <Route path="settings" element={<SettingsShell />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="/" element={<Navigate to="overview" replace />} />
             </Routes>
           </div>
         </main>

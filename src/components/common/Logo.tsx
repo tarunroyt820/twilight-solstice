@@ -5,6 +5,7 @@ interface LogoProps {
     className?: string; // For extra styling if needed
     size?: "sm" | "md" | "lg" | "xl";
     onClick?: () => void; // Optional override
+    onDoubleClick?: () => void;
 }
 
 /**
@@ -16,7 +17,7 @@ interface LogoProps {
  * - lg: h-20 (Sidebar)
  * - xl: h-24 (Large Hero Usage)
  */
-export function Logo({ className = "", size = "md", onClick }: LogoProps) {
+export function Logo({ className = "", size = "md", onClick, onDoubleClick }: LogoProps) {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -47,6 +48,7 @@ export function Logo({ className = "", size = "md", onClick }: LogoProps) {
     return (
         <div
             onClick={handleLogoClick}
+            onDoubleClick={onDoubleClick}
             className={`cursor-pointer inline-flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${className}`}
             role="button"
             tabIndex={0}

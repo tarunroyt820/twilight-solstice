@@ -8,15 +8,18 @@ const app = require('./app');
 const connectDB = require('./config/db');
 
 const startServer = async () => {
-    await connectDB();
     const PORT = process.env.PORT || 5000;
+
     app.listen(PORT, () => {
-        console.log(`✅ Server running on port ${PORT}`);
-        console.log(`🤖 AI Provider: ${process.env.AI_PROVIDER || 'groq (default)'}`);
-        console.log(`🔑 Groq Key loaded: ${process.env.GROQ_API_KEY ? 'YES ✅' : 'NO ❌ — check backend/.env'}`);
-        console.log(`🔑 Gemini Key loaded: ${process.env.GEMINI_API_KEY ? 'YES ✅' : 'NO ❌'}`);
-        console.log(`🌐 CORS allows: ${process.env.FRONTEND_URL || 'http://localhost:5173 (default)'}`);
+        console.log(`Server running on port ${PORT}`);
+        console.log(`AI Provider: ${process.env.AI_PROVIDER || 'groq (default)'}`);
+        console.log(`Groq Key loaded: ${process.env.GROQ_API_KEY ? 'YES' : 'NO - check backend/.env'}`);
+        console.log(`CORS allows: ${process.env.FRONTEND_URL || 'http://localhost:5173 (default)'}`);
     });
+
+    // Connect to Mongo in the background so the API can still boot even if
+    // the database is slow or temporarily unreachable.
+    connectDB();
 };
 
 startServer();

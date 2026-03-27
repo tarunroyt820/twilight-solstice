@@ -26,6 +26,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+
 # local env files
 .env
 backend/.env
@@ -33,6 +34,9 @@ backend/.env
 .env.development.local
 .env.test.local
 .env.production.local
+
+# resume uploads
+backend/uploads/
 
 # vercel
 .vercel

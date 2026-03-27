@@ -20,6 +20,30 @@ const UserSchema = new mongoose.Schema({
         minlength: 6,
         select: false // Don't return password by default
     },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerificationToken: {
+        type: String,
+        default: null,
+        select: false
+    },
+    emailVerificationExpires: {
+        type: Date,
+        default: null,
+        select: false
+    },
+    passwordResetToken: {
+        type: String,
+        default: null,
+        select: false
+    },
+    passwordResetExpires: {
+        type: Date,
+        default: null,
+        select: false
+    },
     jobTitle: {
         type: String,
         default: ''
