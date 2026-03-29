@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:all": "concurrently \"npm run dev\" \"cd backend && node server.js\"",
+    "dev:all": "concurrently \"npm run dev\" \"cd backend && npm run dev\"",
     "run:program": "npm run dev:all",
     "run:website": "npm run dev:all",
     "build": "tsc && vite build",

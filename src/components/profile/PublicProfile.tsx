@@ -1,5 +1,5 @@
-import { getProfile } from "@/services/profileApi";
-import { UserProfile } from "@/types/profile";
+import { getEnhancedProfile } from "@/services/enhancedProfileApi";
+import { EnhancedProfile } from "@/types/enhancedProfile";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,14 +16,18 @@ import {
     Linkedin,
     Twitter,
     Github,
-    Sparkles
+    Sparkles,
+    MapPin,
+    Link as LinkIcon,
+    Wrench,
+    Target
 } from "lucide-react";
 
 export function PublicProfile() {
-    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [profile, setProfile] = useState<EnhancedProfile | null>(null);
 
     useEffect(() => {
-        getProfile().then(setProfile);
+        getEnhancedProfile().then(setProfile);
     }, []);
 
     if (!profile) {
@@ -78,6 +82,10 @@ export function PublicProfile() {
                                     {profile.experienceLevel || "Explorer"}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                                    <Target className="h-4 w-4 text-primary" />
+                                    {profile.targetRole || "Target Role Pending"}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground uppercase tracking-widest">
                                     <Globe className="h-4 w-4 text-primary" />
                                     Global Network
                                 </div>
@@ -117,6 +125,44 @@ export function PublicProfile() {
                                 <div className="absolute -left-6 -top-2 text-6xl text-primary/10 font-serif leading-none italic">"</div>
                                 <p className="text-lg md:text-xl font-bold text-muted-foreground leading-relaxed italic">
                                     {profile.careerGoal || "This professional is currently crafting their mission statement."}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-[2.5rem] border-border/40 bg-card/40 backdrop-blur-xl shadow-xl shadow-black/5 overflow-hidden">
+                        <CardHeader className="p-10 pb-6">
+                            <CardTitle className="text-2xl font-black flex items-center gap-4">
+                                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                    <Target className="h-6 w-6 text-primary" />
+                                </div>
+                                AI Career Context
+                            </CardTitle>
+                            <CardDescription className="text-base font-medium">
+                                Temporary preview data that will later help AI personalize job-role guidance.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-6 px-10 pb-10 md:grid-cols-2">
+                            <div className="space-y-2 rounded-[1.5rem] border border-border/40 bg-muted/20 p-5">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Target Role</p>
+                                <p className="text-lg font-black text-foreground">{profile.targetRole || "Not added yet"}</p>
+                            </div>
+                            <div className="space-y-2 rounded-[1.5rem] border border-border/40 bg-muted/20 p-5">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Years Of Experience</p>
+                                <p className="text-lg font-black text-foreground">{profile.yearsOfExperience || "Not added yet"}</p>
+                            </div>
+                            <div className="space-y-2 rounded-[1.5rem] border border-border/40 bg-muted/20 p-5">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Preferred Industry</p>
+                                <p className="text-lg font-black text-foreground">{profile.preferredIndustry || "Not added yet"}</p>
+                            </div>
+                            <div className="space-y-2 rounded-[1.5rem] border border-border/40 bg-muted/20 p-5">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Work Preference</p>
+                                <p className="text-lg font-black text-foreground">{profile.workPreference || "Not added yet"}</p>
+                            </div>
+                            <div className="space-y-2 rounded-[1.5rem] border border-border/40 bg-muted/20 p-5 md:col-span-2">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">AI Summary</p>
+                                <p className="text-base font-semibold leading-relaxed text-muted-foreground">
+                                    {profile.aiSummary || "No AI-ready summary has been added yet."}
                                 </p>
                             </div>
                         </CardContent>
@@ -185,6 +231,112 @@ export function PublicProfile() {
                                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Inventory Empty</p>
                                 </div>
                             )}
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-[2.5rem] border-border/40 bg-card/40 backdrop-blur-xl shadow-xl shadow-black/5 overflow-hidden">
+                        <CardHeader className="p-8 pb-4">
+                            <CardTitle className="text-xl font-black flex items-center gap-3">
+                                <Wrench className="h-5 w-5 text-primary" />
+                                AI Readiness Snapshot
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6 px-8 pb-8">
+                            <div className="space-y-3">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tools</p>
+                                <div className="flex flex-wrap gap-2.5">
+                                    {profile.tools.length > 0 ? profile.tools.map((tool, index) => (
+                                        <Badge
+                                            key={index}
+                                            className="rounded-2xl border-none bg-accent/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-accent"
+                                        >
+                                            {tool}
+                                        </Badge>
+                                    )) : (
+                                        <span className="text-sm font-medium text-muted-foreground">No tools added yet</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Certifications</p>
+                                <div className="flex flex-wrap gap-2.5">
+                                    {profile.certifications.length > 0 ? profile.certifications.map((item, index) => (
+                                        <Badge
+                                            key={index}
+                                            className="rounded-2xl border-none bg-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-primary"
+                                        >
+                                            {item}
+                                        </Badge>
+                                    )) : (
+                                        <span className="text-sm font-medium text-muted-foreground">No certifications added yet</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Strengths</p>
+                                <div className="flex flex-wrap gap-2.5">
+                                    {profile.strengths.length > 0 ? profile.strengths.map((item, index) => (
+                                        <Badge
+                                            key={index}
+                                            className="rounded-2xl border-none bg-green-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-green-500"
+                                        >
+                                            {item}
+                                        </Badge>
+                                    )) : (
+                                        <span className="text-sm font-medium text-muted-foreground">No strengths added yet</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Improvement Areas</p>
+                                <div className="flex flex-wrap gap-2.5">
+                                    {profile.improvementAreas.length > 0 ? profile.improvementAreas.map((item, index) => (
+                                        <Badge
+                                            key={index}
+                                            className="rounded-2xl border-none bg-amber-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-amber-500"
+                                        >
+                                            {item}
+                                        </Badge>
+                                    )) : (
+                                        <span className="text-sm font-medium text-muted-foreground">No improvement areas added yet</span>
+                                    )}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-[2.5rem] border-border/40 bg-card/40 backdrop-blur-xl shadow-xl shadow-black/5 overflow-hidden">
+                        <CardHeader className="p-8 pb-4">
+                            <CardTitle className="text-xl font-black flex items-center gap-3">
+                                <LinkIcon className="h-5 w-5 text-primary" />
+                                Links & Preferences
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4 px-8 pb-8">
+                            <div className="flex items-center gap-3 text-sm font-semibold text-muted-foreground">
+                                <MapPin className="h-4 w-4 text-primary" />
+                                {profile.preferredLocation || "Preferred location not added yet"}
+                            </div>
+                            <div className="space-y-2">
+                                {[profile.portfolioUrl, profile.linkedinUrl, profile.githubUrl].filter(Boolean).length > 0 ? (
+                                    [profile.portfolioUrl, profile.linkedinUrl, profile.githubUrl].filter(Boolean).map((link, index) => (
+                                        <a
+                                            key={index}
+                                            href={link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="block break-all text-sm font-bold text-primary transition-opacity hover:opacity-80"
+                                        >
+                                            {link}
+                                        </a>
+                                    ))
+                                ) : (
+                                    <p className="text-sm font-medium text-muted-foreground">No portfolio links added yet</p>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
 

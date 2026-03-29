@@ -1,50 +1,61 @@
-import { Button } from "@/components/common/Button";
+import { useEffect, useMemo, useState } from "react";
+import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
+  Bell,
   BookOpen,
+  ChevronLeft,
   Compass,
-  Home,
+  FileText,
+  LayoutGrid,
   LogOut,
   Menu,
   MessageSquare,
   RefreshCw,
+  Search,
   Settings,
-  User,
+  TrendingUp,
   X,
-  FileText,
-  TrendingUp
 } from "lucide-react";
-import { ResumeUpload } from "./ResumeUpload";
-import { SkillGapShell } from "./SkillGapShell";
-import { useState, useEffect } from "react";
-import { Routes, Route, NavLink, useNavigate, Navigate, Link } from "react-router-dom";
-import { OverviewShell } from "./OverviewShell";
-import { CareerPathShell } from "./CareerPathShell";
-import { LearningShell } from "./LearningShell";
-import { SkillExchangeShell } from "./SkillExchangeShell";
-import { AIAssistantShell } from "./AIAssistantShell";
-import { SettingsShell } from "./SettingsShell";
-import Profile from "./Profile";
+
+import { Button } from "@/components/common/Button";
 import { Logo } from "@/components/common/Logo";
+import { cn } from "@/lib/utils";
+import { logout } from "@/services/authApi";
 import { getProfile } from "@/services/profileApi";
 import { UserProfile } from "@/types/profile";
-import { logout } from "@/services/authApi";
 
-const navItems = [
-  { icon: Home, label: "Overview", id: "overview", path: "/dashboard/overview" },
+import { AIAssistantShell } from "./AIAssistantShell";
+import { CareerPathShell } from "./CareerPathShell";
+import { LearningShell } from "./LearningShell";
+import { OverviewShell } from "./OverviewShell";
+import { ResumeUpload } from "./ResumeUpload";
+import { SettingsShell } from "./SettingsShell";
+import { SkillExchangeShell } from "./SkillExchangeShell";
+import { SkillGapShell } from "./SkillGapShell";
+
+const primaryNavItems = [
+  { icon: LayoutGrid, label: "Overview", id: "overview", path: "/dashboard/overview" },
   { icon: Compass, label: "Career Path", id: "career", path: "/dashboard/career" },
   { icon: TrendingUp, label: "Skill Gap", id: "skillgap", path: "/dashboard/skillgap" },
   { icon: BookOpen, label: "Learning", id: "learning", path: "/dashboard/learning" },
   { icon: RefreshCw, label: "Skill Exchange", id: "skills", path: "/dashboard/skills" },
   { icon: MessageSquare, label: "AI Assistant", id: "assistant", path: "/dashboard/assistant" },
+];
+
+const secondaryNavItems = [
   { icon: FileText, label: "My Resume", id: "resume", path: "/dashboard/resume" },
   { icon: Settings, label: "Settings", id: "settings", path: "/dashboard/settings" },
-  { icon: User, label: "Profile", id: "profile", path: "/dashboard/profile" },
 ];
+
+const allNavItems = [...primaryNavItems, ...secondaryNavItems];
 
 export function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [desktopSidebarExpanded, setDesktopSidebarExpanded] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -53,11 +64,11 @@ export function Dashboard() {
         setProfile(data);
       } catch (error) {
         console.error("Dashboard: Error fetching profile", error);
-        // If profile fetch fails, token might be invalid
         logout();
         navigate("/login");
       }
     };
+
     fetchProfile();
   }, [navigate]);
 
@@ -68,216 +79,304 @@ export function Dashboard() {
 
   const handleDashboardLogoDoubleClick = () => {
     const confirmed = window.confirm("Do you want to sign out?");
-    if (!confirmed) return;
-
-    handleLogout();
+    if (confirmed) handleLogout();
   };
 
-  // Helper to get initials
-  const getInitials = (name: string) => {
-    if (!name) return "JD";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  const getInitials = (name: string) =>
+    name
+      ? name
+          .split(" ")
+          .map((part) => part[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2)
+      : "JD";
+
+  const activeItem = useMemo(
+    () =>
+      allNavItems.find((item) => location.pathname.startsWith(item.path)) ||
+      allNavItems[0],
+    [location.pathname],
+  );
+  const isAssistantRoute = location.pathname.startsWith("/dashboard/assistant");
 
   if (!profile) {
     return (
-      <div className="flex h-screen w-full items-center justify-center" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" style={{ borderColor: 'var(--color-teal)', borderTopColor: 'transparent' }}></div>
+      <div
+        className="flex h-screen w-full items-center justify-center"
+        style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}
+      >
+        <div
+          className="h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
+          style={{
+            borderColor: "var(--color-teal)",
+            borderTopColor: "transparent",
+          }}
+        />
       </div>
     );
   }
 
+  const renderNavSection = (
+    title: string,
+    items: typeof primaryNavItems,
+    closeOnClick = false,
+    expanded = true,
+  ) => (
+    <div>
+      {expanded && (
+        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(255,255,255,0.25)]">
+          {title}
+        </p>
+      )}
+      <nav className="space-y-1">
+        {items.map((item) => (
+          <NavLink
+            key={item.id}
+            to={item.path}
+            onClick={() => closeOnClick && setSidebarOpen(false)}
+            style={({ isActive }) => ({
+              background: isActive
+                ? "linear-gradient(135deg, rgba(22,160,133,0.22), rgba(22,160,133,0.08))"
+                : "transparent",
+              color: isActive ? "#16A085" : "rgba(255,255,255,0.45)",
+              fontWeight: isActive ? 600 : 500,
+            })}
+            className={`group relative flex items-center rounded-[10px] py-2.5 text-[13px] transition-all duration-200 hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.7)] ${
+              expanded ? "gap-3 px-3 justify-start" : "justify-center px-0"
+            }`}
+            title={!expanded ? item.label : undefined}
+          >
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-[3px] bg-[#16A085]" />
+                )}
+                <item.icon className="h-[17px] w-[17px] shrink-0 opacity-90" />
+                {expanded && <span className="truncate">{item.label}</span>}
+              </>
+            )}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
+  );
+
   return (
-    <div className="flex min-h-screen transition-colors duration-300" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-      {/* Sidebar - Desktop */}
-      <aside className="hidden w-72 flex-col border-r border-[rgba(21,86,91,0.25)] bg-[rgba(13,17,40,0.95)] backdrop-blur-xl lg:flex sticky top-0 h-screen">
-        <div className="flex h-32 items-center px-8">
-          <Logo size="lg" onClick={() => {}} onDoubleClick={handleDashboardLogoDoubleClick} />
+    <div className="flex h-screen overflow-hidden bg-[#0A0E27] text-white transition-colors duration-300">
+      <aside
+        className="sticky top-0 hidden h-screen shrink-0 flex-col border-r border-[rgba(22,160,133,0.15)] bg-[#0D1128] transition-[width] duration-300 lg:flex"
+        style={{ width: desktopSidebarExpanded ? 272 : 88 }}
+      >
+        <div
+          className={`flex h-16 items-center border-b border-[rgba(22,160,133,0.1)] ${
+            desktopSidebarExpanded ? "justify-between px-[18px]" : "justify-center px-0"
+          }`}
+        >
+          {desktopSidebarExpanded ? (
+            <div className="flex items-center">
+              <Logo
+                size="sm"
+                className="mr-2"
+                onClick={() => {}}
+                onDoubleClick={handleDashboardLogoDoubleClick}
+              />
+              <span className="text-[15px] font-semibold text-white">Nextaro</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => setDesktopSidebarExpanded(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(22,160,133,0.08)] text-[#16A085] transition hover:bg-[rgba(22,160,133,0.18)]"
+              aria-label="Expand sidebar"
+              title="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          )}
+          {desktopSidebarExpanded && (
+            <button
+              onClick={() => setDesktopSidebarExpanded(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-[rgba(22,160,133,0.08)] text-[rgba(255,255,255,0.5)] transition-colors hover:bg-[rgba(22,160,133,0.16)] hover:text-white"
+              aria-label="Collapse sidebar"
+              title="Close menu"
+            >
+              <ChevronLeft className="h-[17px] w-[17px]" />
+            </button>
+          )}
         </div>
 
-        <div className="flex flex-1 flex-col justify-between p-6">
-          <nav className="space-y-1.5">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.id}
-                to={item.path}
-                style={({ isActive }) => ({
-                  background: isActive ? '#16A085' : 'transparent',
-                  color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
-                  boxShadow: isActive ? 'var(--glow-teal)' : 'none',
-                })}
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 group hover:scale-[1.02] hover:bg-[rgba(22,160,133,0.15)]"
-              >
-                <item.icon className={`h-5 w-5 transition-transform duration-200 group-hover:scale-110`} />
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
+        <div className="flex flex-1 flex-col justify-between">
+          <div className={`overflow-hidden py-3 ${desktopSidebarExpanded ? "px-[10px]" : "px-3"}`}>
+            {renderNavSection("Main Menu", primaryNavItems, false, desktopSidebarExpanded)}
+            <div className="mx-[6px] my-3 h-px bg-[rgba(22,160,133,0.08)]" />
+            {renderNavSection("Others", secondaryNavItems, false, desktopSidebarExpanded)}
+          </div>
 
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="group mt-auto flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold transition-all"
-            style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(220,38,38,0.1)';
-              e.currentTarget.style.color = '#dc2626';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
-          >
-            <LogOut className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
-            Sign Out
-          </Button>
+          <div className="border-t border-[rgba(22,160,133,0.1)] p-3">
+            <div
+              className={`rounded-[10px] bg-[rgba(22,160,133,0.07)] ${
+                desktopSidebarExpanded ? "flex items-center gap-3 px-3 py-2.5" : "flex justify-center px-0 py-3"
+              }`}
+            >
+              <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[8px] bg-[linear-gradient(135deg,#16A085,#0e7c6b)] text-[12px] font-bold text-white">
+                {getInitials(profile.fullName)}
+              </div>
+              {desktopSidebarExpanded && (
+                <>
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-semibold text-white">
+                      {profile.fullName}
+                    </p>
+                    <p className="truncate text-[11px] text-[rgba(22,160,133,0.85)]">
+                      {profile.jobTitle || "Nextaro Explorer"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="ml-auto rounded-[5px] p-1 text-[rgba(255,255,255,0.3)] transition hover:bg-[rgba(239,68,68,0.12)] hover:text-[#ef4444]"
+                    aria-label="Sign out"
+                  >
+                    <LogOut className="h-[15px] w-[15px]" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </aside>
 
-      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 backdrop-blur-sm transition-opacity lg:hidden"
-          style={{ background: 'rgba(20,12,48,0.6)' }}
+          className="fixed inset-0 z-40 bg-[rgba(20,12,48,0.6)] backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar - Mobile */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300 ease-out lg:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        style={{
-          background: 'var(--bg-secondary)',
-          borderRight: '1px solid var(--border-subtle)'
-        }}
+        className={`fixed inset-y-0 left-0 z-50 w-80 transform border-r border-[rgba(22,160,133,0.15)] bg-[#0D1128] transition-transform duration-300 ease-out lg:hidden ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
-        <div className="flex h-32 items-center justify-between px-8" style={{ borderBottomWidth: '1px', borderColor: 'var(--border-subtle)' }}>
-          <Logo size="lg" onClick={() => {}} onDoubleClick={handleDashboardLogoDoubleClick} />
+        <div className="flex h-16 items-center justify-between border-b border-[rgba(22,160,133,0.1)] px-5">
+          <div className="flex items-center gap-2">
+            <Logo
+              size="sm"
+              onClick={() => {}}
+              onDoubleClick={handleDashboardLogoDoubleClick}
+            />
+            <span className="text-sm font-semibold text-white">Nextaro</span>
+          </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="rounded-xl p-2 transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-teal-light)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            className="rounded-xl p-2 text-[rgba(255,255,255,0.5)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-white"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="p-6 space-y-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              onClick={() => setSidebarOpen(false)}
-              style={({ isActive }) => ({
-                background: isActive ? 'var(--color-teal)' : 'transparent',
-                color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
-                boxShadow: isActive ? 'var(--glow-teal)' : 'none',
-              })}
-              className="flex items-center gap-3 rounded-2xl px-4 py-4 text-sm font-semibold transition-all"
-              onMouseEnter={(e) => {
-                if (!e.currentTarget.getAttribute('aria-current')) {
-                  e.currentTarget.style.background = 'var(--color-teal-light)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!e.currentTarget.getAttribute('aria-current')) {
-                  e.currentTarget.style.background = 'transparent';
-                }
-              }}
-            >
-              <item.icon className="h-5 w-5" />
-              {item.label}
-            </NavLink>
-          ))}
+
+        <div className="space-y-5 p-6">
+          {renderNavSection("Main Menu", primaryNavItems, true, true)}
+          {renderNavSection("Others", secondaryNavItems, true, true)}
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="mt-6 flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-4 font-semibold transition-all"
-            style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(220,38,38,0.1)';
-              e.currentTarget.style.color = '#dc2626';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
+            className="mt-2 flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-4 font-semibold text-[rgba(255,255,255,0.6)] transition-all hover:bg-[rgba(239,68,68,0.12)] hover:text-[#ef4444]"
           >
             <LogOut className="h-5 w-5" />
             Sign Out
           </Button>
-        </nav>
+        </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden relative">
-        {/* Background Decorative Blurs */}
-        <div className="absolute top-0 right-0 -z-10 h-[500px] w-[500px] rounded-full blur-[120px] pointer-events-none" style={{ background: 'rgba(22,160,133,0.05)' }} />
-        <div className="absolute bottom-0 left-0 -z-10 h-[500px] w-[500px] rounded-full blur-[120px] pointer-events-none" style={{ background: 'rgba(22,160,133,0.03)' }} />
-
-        {/* Top Bar */}
-        <header className="flex h-24 items-center justify-between backdrop-blur-xl px-6 lg:px-12 shrink-0 z-10 sticky top-0" style={{ borderBottomWidth: '1px', borderColor: 'var(--border-subtle)', background: 'rgba(20,12,48,0.85)' }}>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="rounded-2xl p-3 lg:hidden transition-colors"
-              style={{ background: 'var(--color-teal-light)', color: 'var(--text-secondary)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--color-teal-glow)';
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--color-teal-light)';
-                e.currentTarget.style.color = 'var(--text-secondary)';
-              }}
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-            <div className="space-y-0.5">
-              <h1 className="text-2xl font-extrabold tracking-tight lg:text-3xl" style={{ color: 'var(--text-primary)' }}>
-                Hey, {profile?.fullName?.split(" ")[0] || "there"} 👋
-              </h1>
-              <p className="hidden text-sm font-medium sm:block" style={{ color: 'var(--text-secondary)' }}>
-                Here's what's happening with your career today.
-              </p>
-            </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[rgba(22,160,133,0.08)] bg-[rgba(10,14,39,0.9)] px-6 backdrop-blur-xl lg:px-8">
+          <div className="flex items-center gap-3">
+            {!isAssistantRoute && (
+              <button
+                onClick={() => setDesktopSidebarExpanded((current) => !current)}
+                className="hidden h-9 w-9 items-center justify-center rounded-[9px] bg-[rgba(22,160,133,0.08)] text-[rgba(255,255,255,0.5)] transition-colors hover:bg-[rgba(22,160,133,0.16)] hover:text-white lg:flex"
+                aria-label={desktopSidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+                title={desktopSidebarExpanded ? "Close menu" : "Open menu"}
+              >
+                {desktopSidebarExpanded ? (
+                  <ChevronLeft className="h-[17px] w-[17px]" />
+                ) : (
+                  <Menu className="h-[17px] w-[17px]" />
+                )}
+              </button>
+            )}
+            {!isAssistantRoute && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-[rgba(22,160,133,0.08)] text-[rgba(255,255,255,0.5)] transition-colors hover:bg-[rgba(22,160,133,0.16)] hover:text-white lg:hidden"
+              >
+                <Menu className="h-[17px] w-[17px]" />
+              </button>
+            )}
+            <div className="text-base font-bold text-white">{activeItem.label}</div>
           </div>
 
-          <div className="flex items-center gap-5">
-            <div className="hidden sm:flex flex-col items-end">
-              <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{profile?.fullName}</p>
-              <p className="text-xs font-semibold" style={{ color: 'var(--color-teal)' }}>{profile?.jobTitle || "Nextaro Explorer"}</p>
+          <div className="flex items-center gap-3">
+            <div className="hidden h-9 w-[180px] items-center gap-2 rounded-[9px] border border-[rgba(22,160,133,0.12)] bg-[rgba(22,160,133,0.06)] px-3 md:flex">
+              <Search className="h-[13px] w-[13px] text-[rgba(255,255,255,0.3)]" />
+              <input
+                placeholder="Search..."
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[rgba(255,255,255,0.3)]"
+              />
             </div>
-            <div className="group relative cursor-pointer">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-xl transition-transform group-hover:scale-110" style={{ background: 'linear-gradient(to bottom right, var(--color-teal), var(--color-teal-hover))', boxShadow: 'var(--glow-teal)' }}>
-                {getInitials(profile?.fullName || "")}
+            <button className="relative flex h-9 w-9 items-center justify-center rounded-[9px] bg-[rgba(22,160,133,0.06)] text-[rgba(255,255,255,0.5)]">
+              <Bell className="h-[15px] w-[15px]" />
+              <span className="absolute right-2 top-2 h-[7px] w-[7px] rounded-full border-2 border-[#0A0E27] bg-[#ef4444]" />
+            </button>
+            <div className="hidden items-center gap-3 border-l border-[rgba(22,160,133,0.12)] pl-3 sm:flex">
+              <div className="text-right">
+                <p className="text-[13px] font-semibold text-white">
+                  Hey, {profile.fullName.split(" ")[0] || "there"}
+                </p>
+                <p className="text-[11px] text-[rgba(22,160,133,0.8)]">
+                  {profile.jobTitle || "Nextaro Explorer"}
+                </p>
               </div>
-              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 shadow-sm" style={{ borderColor: 'var(--bg-primary)', background: 'var(--color-teal)' }} />
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-[9px] bg-[linear-gradient(135deg,#16A085,#0e7c6b)] text-[12px] font-bold text-white">
+                {getInitials(profile.fullName)}
+                <div className="absolute -bottom-px -right-px h-[10px] w-[10px] rounded-full border-2 border-[#0A0E27] bg-[#22c55e]" />
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Dashboard Content */}
-        <main className="flex-1 overflow-auto bg-[#140C30] p-4 md:p-6 lg:p-8 animate-in fade-in duration-700">
-          <div className="max-w-7xl mx-auto w-full">
+        <main
+          className={cn(
+            "flex-1 min-h-0 bg-[#0A0E27] p-5 lg:px-6 lg:py-5",
+            isAssistantRoute ? "overflow-hidden" : "overflow-auto",
+          )}
+        >
+          <div
+            className={cn(
+              "mx-auto w-full",
+              isAssistantRoute ? "max-w-none" : "max-w-7xl",
+              isAssistantRoute ? "flex h-full min-h-0 flex-col overflow-hidden" : "",
+            )}
+          >
             <Routes>
-                <Route path="overview" element={<OverviewShell />} />
-                <Route path="career" element={<CareerPathShell />} />
-                <Route path="skillgap" element={<SkillGapShell />} />
-                <Route path="learning" element={<LearningShell />} />
-                <Route path="skills" element={<SkillExchangeShell />} />
-                <Route path="assistant" element={<AIAssistantShell />} />
-                <Route path="resume" element={<ResumeUpload />} />
-                <Route path="settings" element={<SettingsShell />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="/" element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<OverviewShell />} />
+              <Route path="career" element={<CareerPathShell />} />
+              <Route path="skillgap" element={<SkillGapShell />} />
+              <Route path="learning" element={<LearningShell />} />
+              <Route path="skills" element={<SkillExchangeShell />} />
+              <Route
+                path="assistant"
+                element={
+                  <div className="flex h-full min-h-0 flex-col overflow-hidden">
+                    <AIAssistantShell />
+                  </div>
+                }
+              />
+              <Route path="resume" element={<ResumeUpload />} />
+              <Route path="settings" element={<SettingsShell />} />
+              <Route path="/" element={<Navigate to="overview" replace />} />
             </Routes>
           </div>
         </main>

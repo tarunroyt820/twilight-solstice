@@ -1,208 +1,442 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/common/Button";
-import { Send, Sparkles, User as UserIcon, Brain, Zap, Trash2, History, Wand2 } from "lucide-react";
-import { InputField } from "@/components/common/InputField";
-import { useState, useRef, useEffect } from "react";
-import { askAI, getHistory, ChatMessage } from "@/services/aiApi";
-import { toast } from "sonner";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  BarChart3,
+  Bot,
+  Check,
+  Cloud,
+  Command,
+  Copy,
+  Figma,
+  ImageIcon,
+  LoaderIcon,
+  Paperclip,
+  PlusSquare,
+  RefreshCw,
+  SendIcon,
+  Sparkles,
+  Target,
+  Trash2,
+  User2,
+  XIcon,
+} from "lucide-react";
+import { toast } from "sonner";
+
+import { cn } from "@/lib/utils";
+import { askAI, ChatMessage, getHistory } from "@/services/aiApi";
+
+function useAutoResizeTextarea(minHeight: number, maxHeight = 200) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const adjustHeight = useCallback(
+    (reset?: boolean) => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+      textarea.style.height = `${minHeight}px`;
+      if (reset) return;
+      textarea.style.height = `${Math.max(minHeight, Math.min(textarea.scrollHeight, maxHeight))}px`;
+    },
+    [maxHeight, minHeight],
+  );
+
+  useEffect(() => {
+    adjustHeight(true);
+  }, [adjustHeight]);
+
+  return { textareaRef, adjustHeight };
+}
+
+const starterPrompts = [
+  {
+    icon: Target,
+    label: "What's my next career milestone?",
+    accent: "from-sky-500/14 to-cyan-400/8 border-sky-400/20 text-sky-200",
+  },
+  {
+    icon: BarChart3,
+    label: "Explain React Server Components",
+    accent: "from-amber-500/14 to-orange-400/8 border-amber-400/20 text-amber-200",
+  },
+  {
+    icon: Cloud,
+    label: "How do I become a Cloud Architect?",
+    accent: "from-violet-500/14 to-fuchsia-400/8 border-violet-400/20 text-violet-200",
+  },
+  {
+    icon: Sparkles,
+    label: "Check my skill gap for Senior roles",
+    accent: "from-emerald-500/14 to-green-400/8 border-emerald-400/20 text-emerald-200",
+  },
+];
+
+const commandSuggestions = [
+  { icon: <ImageIcon className="h-4 w-4" />, label: "Clone UI", description: "Generate a UI from a screenshot", prefix: "/clone" },
+  { icon: <Figma className="h-4 w-4" />, label: "Import Figma", description: "Import a design from Figma", prefix: "/figma" },
+  { icon: <BarChart3 className="h-4 w-4" />, label: "Create Page", description: "Generate a new web page", prefix: "/page" },
+  { icon: <Sparkles className="h-4 w-4" />, label: "Improve", description: "Improve existing UI design", prefix: "/improve" },
+];
+
+function TypingDots() {
+  return (
+    <div className="ml-1 flex items-center">
+      {[1, 2, 3].map((dot) => (
+        <motion.div
+          key={dot}
+          className="mx-0.5 h-1.5 w-1.5 rounded-full bg-white/90"
+          initial={{ opacity: 0.3 }}
+          animate={{ opacity: [0.3, 0.9, 0.3], scale: [0.85, 1.1, 0.85] }}
+          transition={{ duration: 1.2, repeat: Infinity, delay: dot * 0.15, ease: "easeInOut" }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export function AIAssistantShell() {
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [input, setInput] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [isFetching, setIsFetching] = useState(true);
-    const scrollRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const [recentCommand, setRecentCommand] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const commandPaletteRef = useRef<HTMLDivElement>(null);
+  const { textareaRef, adjustHeight } = useAutoResizeTextarea(60, 200);
 
-    useEffect(() => {
-        const fetchHistory = async () => {
-            try {
-                const history = await getHistory();
-                if (history.length > 0) {
-                    setMessages(history);
-                } else {
-                    setMessages([
-                        {
-                            role: "assistant",
-                            content: "# Welcome to Nextaro AI Assistant! 👋\n\nI'm your **Career Co-pilot**. How can I help you today?\n\n- **Roadmaps**: Ask for a personalized 6-month plan.\n- **Skills**: Get tips on mastering a specific technology.\n- **Salary**: Inquire about market trends and roles.\n\n*Type your first question below to get started!*"
-                        }
-                    ]);
-                }
-            } catch (error) {
-                console.error("History fetch error:", error);
-                toast.error("Failed to load chat history");
-            } finally {
-                setIsFetching(false);
-            }
-        };
-        fetchHistory();
-    }, []);
+  const loadHistory = async (withToast = false) => {
+    try {
+      setIsFetching(true);
+      const history = await getHistory();
+      setMessages(history);
+      if (withToast) toast.success(history.length ? "Chat history restored." : "No saved chat history yet.");
+    } catch (error) {
+      console.error("History fetch error:", error);
+      toast.error("Failed to load chat history");
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [messages, isLoading]);
+  useEffect(() => {
+    loadHistory();
+  }, []);
 
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, isLoading]);
 
-        const userMessage = input.trim();
-        setInput("");
-        setMessages(prev => [...prev, { role: "user", content: userMessage }]);
-        setIsLoading(true);
+  useEffect(() => {
+    if (input.startsWith("/") && !input.includes(" ")) {
+      setShowCommandPalette(true);
+      setActiveSuggestion(commandSuggestions.findIndex((item) => item.prefix.startsWith(input)));
+    } else {
+      setShowCommandPalette(false);
+      setActiveSuggestion(-1);
+    }
+  }, [input]);
 
-        try {
-            const response = await askAI(userMessage);
-            setMessages(prev => [...prev, { role: "assistant", content: response.answer }]);
-        } catch (error: any) {
-            console.error("AI Assistant Error:", error);
-            toast.error(error.response?.data?.message || "Failed to get response from AI. Please try again.");
-        } finally {
-            setIsLoading(false);
-        }
+  useEffect(() => {
+    const onMouseDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const trigger = document.querySelector("[data-command-button]");
+      if (commandPaletteRef.current && !commandPaletteRef.current.contains(target) && !trigger?.contains(target)) {
+        setShowCommandPalette(false);
+      }
     };
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, []);
 
-    const suggestedPrompts = [
-        "What's my next career milestone?",
-        "Explain React Server Components",
-        "How do I become a Cloud Architect?",
-        "Check my skill gap for Senior roles"
-    ];
+  const focusTextarea = () => window.requestAnimationFrame(() => textareaRef.current?.focus());
 
-    return (
-        <div className="flex flex-col h-[calc(100vh-14rem)] space-y-6 animate-in fade-in duration-700">
-            {/* AI Page Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 shadow-lg shadow-primary/5">
-                        <Brain className="h-7 w-7 text-primary" />
-                    </div>
-                    <div>
-                        <h2 className="text-3xl font-black tracking-tight flex items-center gap-2">
-                            Nextaro <span className="text-gradient">Intelligence</span>
-                        </h2>
-                        <p className="text-muted-foreground font-semibold flex items-center gap-2">
-                            <Zap className="h-3 w-3 text-accent" />
-                            LLM-powered career consultancy
-                        </p>
-                    </div>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border/40">
-                        <History className="h-5 w-5 text-muted-foreground" />
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border/40 hover:text-destructive">
-                        <Trash2 className="h-5 w-5" />
-                    </Button>
-                </div>
+  const handleSend = async () => {
+    if (!input.trim() || isLoading || isFetching) return;
+    const userMessage = input.trim();
+    setMessages((prev) => [...prev, { role: "user", content: userMessage, timestamp: new Date().toISOString() }]);
+    setInput("");
+    setAttachments([]);
+    adjustHeight(true);
+    setIsLoading(true);
+    try {
+      const response = await askAI(userMessage);
+      setMessages((prev) => [...prev, { role: "assistant", content: response.answer, timestamp: new Date().toISOString() }]);
+    } catch (error: any) {
+      console.error("AI Assistant Error:", error);
+      toast.error(error.response?.data?.message || "Failed to get response from AI. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCopy = async (content: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedIndex(index);
+      toast.success("Response copied");
+      window.setTimeout(() => setCopiedIndex(null), 1800);
+    } catch {
+      toast.error("Unable to copy the response");
+    }
+  };
+
+  const selectCommandSuggestion = (index: number) => {
+    const selected = commandSuggestions[index];
+    setInput(`${selected.prefix} `);
+    setShowCommandPalette(false);
+    setRecentCommand(selected.label);
+    window.setTimeout(() => setRecentCommand(null), 2200);
+    focusTextarea();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (showCommandPalette) {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setActiveSuggestion((current) => (current < commandSuggestions.length - 1 ? current + 1 : 0));
+        return;
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setActiveSuggestion((current) => (current > 0 ? current - 1 : commandSuggestions.length - 1));
+        return;
+      }
+      if (event.key === "Tab") {
+        event.preventDefault();
+        if (activeSuggestion >= 0) selectCommandSuggestion(activeSuggestion);
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setShowCommandPalette(false);
+        return;
+      }
+    }
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSend();
+    }
+  };
+
+  return (
+    <div className="relative flex h-full min-h-0 w-full flex-col gap-3 overflow-hidden font-['Plus_Jakarta_Sans',sans-serif] text-white">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-violet-500/10 blur-[128px]" />
+        <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-indigo-500/10 blur-[128px]" />
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between px-1 py-1">
+        <div className="flex items-center gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-gradient-to-br from-indigo-500 to-violet-500 shadow-[0_8px_24px_rgba(99,102,241,0.32)]">
+            <Bot className="h-4.5 w-4.5" />
+          </div>
+          <div>
+            <h2 className="flex items-center gap-2 text-[18px] font-extrabold tracking-[-0.03em]">
+              Nextaro
+              <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">Intelligence</span>
+            </h2>
+            <div className="mt-0.5 flex items-center gap-2 text-[11px] font-medium text-white/50">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              LLM-powered career consultancy
             </div>
-
-            {/* Chat Container */}
-            <Card className="flex-1 rounded-[2.5rem] border-border/40 bg-card/40 backdrop-blur-xl overflow-hidden flex flex-col shadow-2xl shadow-black/5">
-                <CardContent ref={scrollRef} className="flex-1 p-6 lg:p-10 overflow-auto space-y-8 scroll-smooth">
-                    {isFetching ? (
-                        <div className="flex flex-col items-center justify-center h-full space-y-4">
-                            <div className="h-12 w-12 animate-spin rounded-2xl border-4 border-primary border-t-transparent" />
-                            <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">Hydrating your history...</p>
-                        </div>
-                    ) : (
-                        <>
-                            {messages.map((msg, i) => (
-                                <div key={i} className={`flex gap-5 group items-start ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                                    <div className={`h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 ${msg.role === "assistant"
-                                            ? "bg-gradient-to-br from-primary to-accent text-white"
-                                            : "bg-muted border border-border/40 text-foreground"
-                                        }`}>
-                                        {msg.role === "assistant" ? <Wand2 className="h-5 w-5" /> : <UserIcon className="h-5 w-5" />}
-                                    </div>
-                                    <div className={`max-w-[85%] p-6 rounded-[2rem] text-[15px] leading-relaxed shadow-sm border ${msg.role === "assistant"
-                                            ? "bg-card/80 rounded-tl-none border-border/30 text-foreground prose-custom"
-                                            : "bg-primary text-primary-foreground rounded-tr-none border-none shadow-xl shadow-primary/10"
-                                        }`}>
-                                        {msg.role === "assistant" ? (
-                                            <div className="prose prose-sm dark:prose-invert max-w-none 
-                                                prose-headings:font-black prose-headings:tracking-tight 
-                                                prose-p:font-medium prose-p:text-muted-foreground dark:prose-p:text-slate-300
-                                                prose-strong:text-foreground prose-strong:font-black
-                                                prose-ul:list-disc prose-li:my-1 prose-code:bg-muted prose-code:px-1 prose-code:rounded">
-                                                <ReactMarkdown>{msg.content}</ReactMarkdown>
-                                            </div>
-                                        ) : (
-                                            <p className="font-semibold">{msg.content}</p>
-                                        )}
-                                        {msg.timestamp && (
-                                            <div className={`mt-3 text-[10px] font-bold uppercase tracking-widest ${msg.role === 'user' ? 'text-white/60' : 'text-muted-foreground/50'}`}>
-                                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-
-                            {isLoading && (
-                                <div className="flex gap-5 items-start">
-                                    <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center animate-pulse">
-                                        <Sparkles className="h-5 w-5 text-white" />
-                                    </div>
-                                    <div className="bg-card/80 p-6 rounded-[2rem] rounded-tl-none border border-border/30 shadow-sm flex items-center gap-2">
-                                        <div className="flex gap-1.5">
-                                            <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                                            <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                                            <span className="w-2 h-2 bg-primary/30 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                                        </div>
-                                        <span className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">Nextaro is thinking</span>
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </CardContent>
-
-                {/* Input Area */}
-                <div className="p-6 border-t border-border/40 bg-card/60 space-y-6">
-                    {messages.length < 5 && !isLoading && (
-                        <div className="flex flex-wrap gap-2 px-2">
-                            {suggestedPrompts.map((p, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setInput(p)}
-                                    className="px-4 py-2 rounded-xl bg-muted/50 border border-border/40 text-xs font-bold text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
-                                >
-                                    {p}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    <form
-                        onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                        className="flex gap-3 relative"
-                    >
-                        <div className="relative flex-1">
-                            <input
-                                placeholder="Message Nextaro AI..."
-                                className="w-full h-16 pl-6 pr-16 rounded-[1.25rem] bg-background border border-border/40 focus:outline-none focus:ring-2 focus:ring-primary/20 text-foreground font-medium transition-all shadow-inner"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                disabled={isLoading || isFetching}
-                            />
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                                <Button
-                                    type="submit"
-                                    className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-primary/20 p-0"
-                                    disabled={isLoading || isFetching || !input.trim()}
-                                >
-                                    <Send className="h-5 w-5" />
-                                </Button>
-                            </div>
-                        </div>
-                    </form>
-                    <p className="text-[10px] text-center font-bold text-muted-foreground uppercase tracking-widest">
-                        AI can make mistakes. Verify important career information.
-                    </p>
-                </div>
-            </Card>
+          </div>
         </div>
-    );
+
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => { setMessages([]); setInput(""); setAttachments([]); adjustHeight(true); toast.success("Started a fresh chat"); }} className="flex h-9 w-9 items-center justify-center rounded-xl text-white/45 transition hover:bg-white/5 hover:text-white">
+            <PlusSquare className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => loadHistory(true)} disabled={isFetching} className="flex h-9 w-9 items-center justify-center rounded-xl text-white/45 transition hover:bg-white/5 hover:text-white disabled:opacity-40">
+            <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+          </button>
+          <button type="button" onClick={() => { setMessages([]); setInput(""); setAttachments([]); adjustHeight(true); toast.success("Chat cleared from the current view"); }} className="flex h-9 w-9 items-center justify-center rounded-xl text-white/45 transition hover:bg-red-500/10 hover:text-red-300">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="relative z-10 flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(22,22,29,0.96),rgba(22,22,29,0.74))] shadow-[0_20px_60px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+        <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/40 to-transparent" />
+
+        <div
+          ref={scrollRef}
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-5 lg:px-6"
+        >
+          {isFetching ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-4">
+              <div className="h-12 w-12 animate-spin rounded-[18px] border-4 border-indigo-400 border-t-transparent" />
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/40">Hydrating your history</p>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-start px-2 pt-6 text-center">
+              <div className="relative mb-3">
+                <div className="absolute inset-[-24px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.12),transparent)] animate-pulse" />
+                <div className="relative flex h-[56px] w-[56px] items-center justify-center rounded-[18px] bg-gradient-to-br from-indigo-500 to-violet-500 shadow-[0_10px_32px_rgba(99,102,241,0.35)]">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+              </div>
+              <h3 className="text-[22px] font-extrabold tracking-[-0.04em]">
+                How can I help you <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">today?</span>
+              </h3>
+              <p className="mt-2 max-w-md text-[13px] leading-6 text-white/45">
+                I&apos;m your AI career co-pilot. Ask me about roadmaps, skills, salary benchmarks, interview prep, and more.
+              </p>
+              <div className="mt-5 grid w-full max-w-[540px] gap-3 md:grid-cols-2">
+                {starterPrompts.map((prompt) => (
+                  <button key={prompt.label} type="button" onClick={() => { setInput(prompt.label); focusTextarea(); }} className={`flex items-start gap-3 rounded-2xl border bg-gradient-to-br p-4 text-left transition duration-200 hover:scale-[1.02] ${prompt.accent}`}>
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5">
+                      <prompt.icon className="h-4 w-4" />
+                    </div>
+                    <span className="text-[12px] font-semibold leading-5 text-white/80">{prompt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {messages.map((msg, index) => {
+                const isUser = msg.role === "user";
+                return (
+                  <div key={`${msg.role}-${index}-${msg.timestamp ?? "pending"}`} className={cn("flex gap-3", isUser && "flex-row-reverse")}>
+                    <div className={cn("flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px]", isUser ? "border border-white/12 bg-white/8 text-white/55" : "bg-gradient-to-br from-indigo-500 to-violet-500 shadow-[0_2px_12px_rgba(99,102,241,0.28)]")}>
+                      {isUser ? <User2 className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                    </div>
+                    <div className={cn("flex max-w-[82%] flex-col", isUser && "items-end")}>
+                      <div className={cn("rounded-2xl px-4 py-3 text-[13.5px] leading-7", isUser ? "rounded-tr-[6px] bg-gradient-to-br from-indigo-500 to-indigo-600 font-medium text-white shadow-[0_8px_24px_rgba(99,102,241,0.22)]" : "rounded-tl-[6px] border border-white/8 bg-[#1c1c26] text-white/80")}>
+                        {isUser ? (
+                          <p className="whitespace-pre-wrap">{msg.content}</p>
+                        ) : (
+                          <div className="prose prose-sm max-w-none prose-headings:font-extrabold prose-headings:text-white prose-p:text-white/75 prose-strong:text-white prose-li:text-white/75 prose-code:rounded prose-code:bg-white/8 prose-code:px-1 prose-code:text-white prose-pre:bg-black/30">
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          </div>
+                        )}
+                      </div>
+                      <div className={cn("mt-1.5 flex items-center gap-2 px-1", isUser && "justify-end")}>
+                        <span className="text-[10px] font-medium text-white/25">
+                          {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                        </span>
+                        {!isUser && (
+                          <button type="button" onClick={() => handleCopy(msg.content, index)} className="flex items-center gap-1 text-[10px] font-medium text-white/25 transition hover:text-white/55">
+                            {copiedIndex === index ? <><Check className="h-3 w-3 text-emerald-400" /><span className="text-emerald-400">Copied</span></> : <><Copy className="h-3 w-3" />Copy</>}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {isLoading && (
+                <div className="flex gap-3">
+                  <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-indigo-500 to-violet-500">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div className="flex items-center gap-3 rounded-2xl rounded-tl-[6px] border border-white/8 bg-[#1c1c26] px-4 py-3">
+                    <span className="text-[11px] font-semibold text-white/45">Thinking...</span>
+                    <TypingDots />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="sticky bottom-0 z-10 shrink-0 border-t border-white/[0.05] bg-[linear-gradient(0deg,rgba(18,18,24,0.98),rgba(22,22,29,0.9))] backdrop-blur-2xl">
+          <AnimatePresence>
+            {recentCommand && (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} className="px-4 pt-2 text-center text-xs text-violet-200/80 sm:px-5 lg:px-6">
+                Command ready: <span className="font-semibold text-white">{recentCommand}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {messages.length > 0 && messages.length < 6 && !isLoading && (
+            <div className="flex flex-wrap gap-2 px-4 pt-3 sm:px-5 lg:px-6">
+              {starterPrompts.map((prompt) => (
+                <button key={prompt.label} type="button" onClick={() => { setInput(prompt.label); focusTextarea(); }} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/45 transition hover:bg-white/8 hover:text-white/80">
+                  {prompt.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="p-3 sm:px-5 lg:px-6">
+            <div className="relative rounded-2xl border border-white/[0.05] bg-white/[0.02] shadow-2xl">
+              <AnimatePresence>
+                {showCommandPalette && (
+                  <motion.div ref={commandPaletteRef} className="absolute bottom-full left-4 right-4 z-50 mb-2 overflow-hidden rounded-lg border border-white/10 bg-black/90 shadow-lg backdrop-blur-xl" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }} transition={{ duration: 0.15 }}>
+                    <div className="bg-black/95 py-1">
+                      {commandSuggestions.map((suggestion, index) => (
+                        <button key={suggestion.prefix} type="button" className={cn("flex w-full items-start gap-3 px-3 py-2 text-left text-xs transition-colors", activeSuggestion === index ? "bg-white/10 text-white" : "text-white/70 hover:bg-white/5")} onClick={() => selectCommandSuggestion(index)}>
+                          <div className="mt-0.5 flex h-5 w-5 items-center justify-center text-white/60">{suggestion.icon}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2"><span className="font-medium">{suggestion.label}</span><span className="text-[10px] text-white/35">{suggestion.prefix}</span></div>
+                            <div className="mt-0.5 text-[10px] text-white/35">{suggestion.description}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="p-4">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(event) => { setInput(event.target.value); adjustHeight(); }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask Nextaro anything about your career..."
+                  className="min-h-[60px] w-full resize-none bg-transparent px-4 py-3 text-sm text-white/90 placeholder:text-white/20 focus:outline-none"
+                  style={{ overflow: "hidden" }}
+                  disabled={isFetching || isLoading}
+                />
+              </div>
+
+              <AnimatePresence>
+                {attachments.length > 0 && (
+                  <motion.div className="flex flex-wrap gap-2 px-4 pb-3" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+                    {attachments.map((file, index) => (
+                      <motion.div key={`${file}-${index}`} className="flex items-center gap-2 rounded-lg bg-white/[0.03] px-3 py-1.5 text-xs text-white/70" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
+                        <span>{file}</span>
+                        <button type="button" onClick={() => setAttachments((prev) => prev.filter((_, itemIndex) => itemIndex !== index))} className="text-white/40 transition-colors hover:text-white">
+                          <XIcon className="h-3 w-3" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="flex items-center justify-between gap-4 border-t border-white/[0.05] p-4">
+                <div className="flex items-center gap-3">
+                  <motion.button type="button" onClick={() => { const file = `attachment-${Math.floor(Math.random() * 1000)}.png`; setAttachments((prev) => [...prev, file]); toast.success(`${file} attached to the prompt`); }} whileTap={{ scale: 0.94 }} className="rounded-lg p-2 text-white/40 transition-colors hover:text-white/90">
+                    <Paperclip className="h-4 w-4" />
+                  </motion.button>
+                  <motion.button type="button" data-command-button onClick={(event) => { event.stopPropagation(); setShowCommandPalette((current) => !current); focusTextarea(); }} whileTap={{ scale: 0.94 }} className={cn("rounded-lg p-2 text-white/40 transition-colors hover:text-white/90", showCommandPalette && "bg-white/10 text-white/90")}>
+                    <Command className="h-4 w-4" />
+                  </motion.button>
+                </div>
+
+                <motion.button type="button" onClick={handleSend} whileHover={{ scale: input.trim() ? 1.01 : 1 }} whileTap={{ scale: input.trim() ? 0.98 : 1 }} disabled={isLoading || isFetching || !input.trim()} className={cn("flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all", input.trim() ? "bg-white text-[#0A0A0B] shadow-lg shadow-white/10" : "bg-white/[0.05] text-white/40")}>
+                  {isLoading ? <LoaderIcon className="h-4 w-4 animate-[spin_2s_linear_infinite]" /> : <SendIcon className="h-4 w-4" />}
+                  <span>Send</span>
+                </motion.button>
+              </div>
+            </div>
+          </div>
+
+          <p className="px-4 pb-3 text-center text-[10px] font-medium tracking-[0.02em] text-white/25 sm:px-5 lg:px-6">
+            Nextaro AI can make mistakes. Always verify important career decisions with real data.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
