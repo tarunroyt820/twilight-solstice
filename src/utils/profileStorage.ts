@@ -14,6 +14,7 @@ export const initialProfile: UserProfile = {
     careerGoal: "",
     jobTitle: "",
     experienceLevel: "beginner",
+    profilePhotoUrl: "",
 };
 
 export const loadProfile = (): UserProfile => {

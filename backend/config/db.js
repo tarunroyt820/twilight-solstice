@@ -2,6 +2,16 @@ const mongoose = require('mongoose');
 // NOTE: dotenv is loaded in server.js before this file is ever called.
 // Do NOT add require('dotenv').config() here — it would load from the wrong path.
 
+let retryTimer = null;
+
+const scheduleReconnect = () => {
+    if (retryTimer) return;
+    retryTimer = setTimeout(() => {
+        retryTimer = null;
+        connectDB();
+    }, 10000);
+};
+
 const connectDB = async () => {
     try {
         if (!process.env.MONGO_URI) {
@@ -13,16 +23,23 @@ const connectDB = async () => {
         }
 
         const conn = await mongoose.connect(process.env.MONGO_URI, {
-            serverSelectionTimeoutMS: 5000,
+            serverSelectionTimeoutMS: 3000,
             socketTimeoutMS: 45000,
+            family: 4,
         });
 
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+        mongoose.connection.on('disconnected', () => {
+            console.error('❌ MongoDB disconnected. Retrying in 10 seconds...');
+            scheduleReconnect();
+        });
     } catch (error) {
         // Log the error clearly but do NOT call process.exit().
         // The server will still start; individual DB operations will return 500 errors.
         console.error(`❌ MongoDB connection failed: ${error.message}`);
         console.error('   Check your MONGO_URI in backend/.env');
+        console.error('   If this is DNS related, switch DNS to 8.8.8.8 or 1.1.1.1 and retry.');
+        scheduleReconnect();
     }
 };
 

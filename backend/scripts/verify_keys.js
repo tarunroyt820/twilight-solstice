@@ -3,8 +3,7 @@
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
-const groqService = require("../services/ai/groq.service");
-const nvidiaService = require("../services/ai/nvidia.service");
+const deepseekService = require("../services/ai/deepseek.service");
 
 const TEST_PROMPT = "Hello! In exactly 10 words, tell me one career tip for a software developer.";
 
@@ -14,31 +13,25 @@ async function testKeys() {
     console.log("========================================\n");
 
     console.log("ENV CHECK:");
-    console.log(`  GROQ_API_KEY    : ${process.env.GROQ_API_KEY ? "Loaded" : "Missing"}`);
-    console.log(`  NVIDIA_API_KEY  : ${process.env.NVIDIA_API_KEY ? "Loaded" : "Missing"}`);
+    console.log(`  AI_PROVIDER     : ${process.env.AI_PROVIDER || "deepseek"}`);
+    console.log(`  HUGGINGFACE_API_KEY: ${process.env.HUGGINGFACE_API_KEY ? "Loaded" : "Missing"}`);
+    console.log(`  HF_API_TOKEN    : ${process.env.HF_API_TOKEN ? "Loaded" : "Missing"}`);
+    console.log(`  DEEPSEEK_MODEL  : ${process.env.DEEPSEEK_MODEL || "deepseek-ai/DeepSeek-R1"}`);
     console.log(`  MONGO_URI       : ${process.env.MONGO_URI ? "Loaded" : "Missing"}`);
     console.log(`  JWT_SECRET      : ${process.env.JWT_SECRET ? "Loaded" : "Missing"}`);
     console.log(`  JWT_REFRESH_SECRET: ${process.env.JWT_REFRESH_SECRET ? "Loaded" : "Missing"}`);
     console.log("");
 
-    console.log("1. Testing GROQ (primary AI provider)...");
-    try {
-        const res = await groqService.generateResponse(TEST_PROMPT);
-        console.log("   Groq response:", res.trim().substring(0, 100));
-    } catch (err) {
-        console.error("   Groq FAILED:", err.message);
-    }
-
-    if (process.env.NVIDIA_API_KEY && !process.env.NVIDIA_API_KEY.startsWith("REPLACE_")) {
-        console.log("\n2. Testing NVIDIA (optional provider)...");
+    if ((process.env.HUGGINGFACE_API_KEY || process.env.HF_API_TOKEN) && !String(process.env.HUGGINGFACE_API_KEY || process.env.HF_API_TOKEN).startsWith("REPLACE_")) {
+        console.log("\n1. Testing DeepSeek via Hugging Face (primary provider)...");
         try {
-            const res = await nvidiaService.generateResponse(TEST_PROMPT);
-            console.log("   NVIDIA response:", res.trim().substring(0, 100));
+            const res = await deepseekService.generateResponse(TEST_PROMPT);
+            console.log("   DeepSeek response:", String(res).trim().substring(0, 100));
         } catch (err) {
-            console.error("   NVIDIA FAILED:", err.message);
+            console.error("   DEEPSEEK FAILED:", err.message);
         }
     } else {
-        console.log("\n2. NVIDIA - Skipped (no key set, optional)");
+        console.log("\n1. DeepSeek - Skipped (no key set)");
     }
 
     console.log("\n========================================");

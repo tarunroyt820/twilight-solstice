@@ -12,4 +12,5 @@ export interface UserProfile {
     careerGoal: string;
     jobTitle?: string;
     experienceLevel?: string;
+    profilePhotoUrl?: string;
 }

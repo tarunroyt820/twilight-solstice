@@ -24,7 +24,7 @@ import {
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
-import { askAI, ChatMessage, getHistory } from "@/services/aiApi";
+import { askAI, ChatMessage, getHistory, streamAI } from "@/services/aiApi";
 
 function useAutoResizeTextarea(minHeight: number, maxHeight = 200) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -94,6 +94,7 @@ function TypingDots() {
 }
 
 export function AIAssistantShell() {
+  const STREAMING_ENABLED = false;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
@@ -103,6 +104,7 @@ export function AIAssistantShell() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const [recentCommand, setRecentCommand] = useState<string | null>(null);
+  const [activeModel, setActiveModel] = useState("llama-3.1-8b-instant");
   const scrollRef = useRef<HTMLDivElement>(null);
   const commandPaletteRef = useRef<HTMLDivElement>(null);
   const { textareaRef, adjustHeight } = useAutoResizeTextarea(60, 200);
@@ -162,11 +164,58 @@ export function AIAssistantShell() {
     adjustHeight(true);
     setIsLoading(true);
     try {
-      const response = await askAI(userMessage);
-      setMessages((prev) => [...prev, { role: "assistant", content: response.answer, timestamp: new Date().toISOString() }]);
+      if (STREAMING_ENABLED) {
+        const assistantTimestamp = new Date().toISOString();
+        setMessages((prev) => [...prev, { role: "assistant", content: "", timestamp: assistantTimestamp }]);
+        try {
+          await streamAI(userMessage, (text) => {
+            setMessages((prev) => {
+              const next = [...prev];
+              const lastIndex = next.length - 1;
+              if (lastIndex >= 0 && next[lastIndex].role === "assistant") {
+                next[lastIndex] = {
+                  ...next[lastIndex],
+                  content: `${next[lastIndex].content}${text}`,
+                };
+              }
+              return next;
+            });
+          }, { provider: "groq" });
+        } catch {
+          const response = await askAI(userMessage, { provider: "groq" });
+          if (response.modelUsed) {
+            setActiveModel(response.modelUsed);
+          }
+          setMessages((prev) => {
+            const next = [...prev];
+            const lastIndex = next.length - 1;
+            if (lastIndex >= 0 && next[lastIndex].role === "assistant" && !next[lastIndex].content) {
+              next[lastIndex] = {
+                ...next[lastIndex],
+                content: response.answer,
+              };
+              return next;
+            }
+            return [...prev, { role: "assistant", content: response.answer, timestamp: new Date().toISOString() }];
+          });
+          toast.message("Streaming interrupted. Delivered full response instead.");
+        }
+      } else {
+        const response = await askAI(userMessage, { provider: "groq" });
+        if (response.modelUsed) {
+          setActiveModel(response.modelUsed);
+        }
+        setMessages((prev) => [...prev, { role: "assistant", content: response.answer, timestamp: new Date().toISOString() }]);
+      }
     } catch (error: any) {
       console.error("AI Assistant Error:", error);
-      toast.error(error.response?.data?.message || "Failed to get response from AI. Please try again.");
+      setMessages((prev) => {
+        if (prev[prev.length - 1]?.role === "assistant" && !prev[prev.length - 1]?.content) {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
+      toast.error(error.response?.data?.message || error.message || "Failed to get response from AI. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -243,7 +292,9 @@ export function AIAssistantShell() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
-              LLM-powered career consultancy
+              <span>Provider: Groq</span>
+              <span className="text-white/25">·</span>
+              <span>Model: {activeModel}</span>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Bell,
@@ -24,6 +24,7 @@ import {
   getEnhancedProfile,
   updateEnhancedProfile,
 } from "@/services/enhancedProfileApi";
+import { uploadProfilePhoto } from "@/services/profileApi";
 
 type TabId = "profile" | "upgrade" | "notifications" | "account" | "privacy";
 
@@ -95,6 +96,7 @@ export function SettingsShell() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("profile");
   const [toggles, setToggles] = useState<ToggleState>(initialToggles);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     getEnhancedProfile().then((data) => {
@@ -143,6 +145,38 @@ export function SettingsShell() {
 
   const toggleValue = (key: keyof ToggleState) => {
     setToggles((current) => ({ ...current, [key]: !current[key] }));
+  };
+
+  const getPhotoUrl = (photoUrl?: string) => {
+    if (!photoUrl) return "";
+    if (/^https?:\/\//i.test(photoUrl)) return photoUrl;
+    const base = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    return `${base}${photoUrl}`;
+  };
+
+  const handlePhotoSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const updated = await uploadProfilePhoto(file);
+      setProfile((current) =>
+        current ? { ...current, profilePhotoUrl: updated.profilePhotoUrl || "" } : current,
+      );
+      setSavedProfile((current) =>
+        current ? { ...current, profilePhotoUrl: updated.profilePhotoUrl || "" } : current,
+      );
+      toast.success("Profile photo updated");
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || "Failed to upload photo";
+      toast.error(message);
+    } finally {
+      if (event.target) {
+        event.target.value = "";
+      }
+    }
   };
 
   if (!profile || !profileCompleteness) {
@@ -278,8 +312,16 @@ export function SettingsShell() {
 
               <div className="space-y-6 p-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[rgba(115,195,255,0.12)] text-lg font-black text-[#9fd0ff]">
-                    {getInitials(profile.fullName)}
+                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-[rgba(115,195,255,0.12)] text-lg font-black text-[#9fd0ff]">
+                    {profile.profilePhotoUrl ? (
+                      <img
+                        src={getPhotoUrl(profile.profilePhotoUrl)}
+                        alt="Profile"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      getInitials(profile.fullName)
+                    )}
                   </div>
                   <div>
                     <p className="text-base font-bold text-white">
@@ -297,10 +339,21 @@ export function SettingsShell() {
                       </span>
                     </div>
                   </div>
-                  <button className="ml-auto inline-flex h-10 items-center gap-2 rounded-xl border border-[rgba(255,255,255,0.12)] px-4 text-sm text-[rgba(189,216,233,0.72)] transition hover:bg-[rgba(255,255,255,0.04)]">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="ml-auto inline-flex h-10 items-center gap-2 rounded-xl border border-[rgba(255,255,255,0.12)] px-4 text-sm text-[rgba(189,216,233,0.72)] transition hover:bg-[rgba(255,255,255,0.04)]"
+                  >
                     <Upload className="h-4 w-4" />
                     Change photo
                   </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={handlePhotoSelect}
+                  />
                 </div>
 
                 <div className="rounded-xl bg-[rgba(255,255,255,0.04)] p-4">

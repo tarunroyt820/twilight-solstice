@@ -1,9 +1,38 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/common/Button";
-import { BookOpen, Play, CheckCircle, Clock, Star, Zap, ChevronRight, Lock, Trophy } from "lucide-react";
-import { ProgressBar } from "@/components/common/ProgressBar";
+import { BookOpen, Play, CheckCircle, Clock, Star, ChevronRight, Lock, Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getCareerPlan } from "@/services/careerPlanApi";
+import { CareerPlan } from "@/types/careerPlan";
 
 export function LearningShell() {
+    const [careerPlan, setCareerPlan] = useState<CareerPlan | null>(null);
+    const [completedItems, setCompletedItems] = useState<string[]>(() => {
+        try {
+            return JSON.parse(localStorage.getItem("completedStudyItems") || "[]");
+        } catch {
+            return [];
+        }
+    });
+
+    useEffect(() => {
+        getCareerPlan()
+            .then((plan) => setCareerPlan(plan))
+            .catch(() => {
+                // No plan yet — keep current learning content.
+            });
+    }, []);
+
+    const toggleItem = (item: string) => {
+        setCompletedItems((prev) => {
+            const updated = prev.includes(item)
+                ? prev.filter((currentItem) => currentItem !== item)
+                : [...prev, item];
+            localStorage.setItem("completedStudyItems", JSON.stringify(updated));
+            return updated;
+        });
+    };
+
     const courses = [
         {
             title: "Advanced React Patterns",
@@ -47,7 +76,6 @@ export function LearningShell() {
 
     return (
         <div className="space-y-10 animate-in fade-in duration-1000">
-            {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">
@@ -62,7 +90,7 @@ export function LearningShell() {
                 <div className="flex gap-3">
                     <div className="text-right hidden sm:block">
                         <p className="text-sm font-bold text-muted-foreground uppercase tracking-tighter">Current Goal</p>
-                        <p className="text-xl font-black text-foreground">Senior Architect</p>
+                        <p className="text-xl font-black text-foreground">{careerPlan?.careerGoal || "Senior Architect"}</p>
                     </div>
                     <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-lg">
                         <Star className="h-6 w-6" />
@@ -70,12 +98,105 @@ export function LearningShell() {
                 </div>
             </div>
 
-            {/* Active Learning Grid */}
             <div className="grid gap-8">
+                <Card className="rounded-[2.5rem] border-border/40 bg-card/60 backdrop-blur-sm">
+                    <CardHeader className="p-8">
+                        <CardTitle className="flex items-center gap-3">
+                            <BookOpen className="h-6 w-6 text-primary" />
+                            Plan-Based Learning Recommendations
+                        </CardTitle>
+                        <CardDescription>
+                            {careerPlan ? careerPlan.careerGoal : "Complete Career Path setup to see your learning recommendations."}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6 p-8 pt-0">
+                        <div>
+                            <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Recommended Skills</h4>
+                            <div className="mt-3 grid gap-3">
+                                {careerPlan?.recommendedSkills?.length ? (
+                                    careerPlan.recommendedSkills.map((skill, i) => (
+                                        <div key={i} className="rounded-2xl bg-muted/30 px-4 py-3 text-sm font-semibold text-foreground">
+                                            {skill}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="rounded-2xl bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                                        Complete Career Path setup to see your learning recommendations.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Weekly Tasks</h4>
+                            <div className="mt-3 grid gap-3">
+                                {careerPlan?.weeklyTasks?.length ? (
+                                    careerPlan.weeklyTasks.map((task, i) => (
+                                        <div key={i} className="rounded-2xl bg-muted/30 px-4 py-3 text-sm font-semibold text-foreground">
+                                            {task}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="rounded-2xl bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                                        Complete Career Path setup to see your learning recommendations.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Skills to Learn</h4>
+                            <div className="mt-3 grid gap-3">
+                                {careerPlan?.recommendedSkills?.length ? (
+                                    careerPlan.recommendedSkills.map((skill, i) => (
+                                        <label key={i} className="flex items-center gap-3 rounded-2xl bg-muted/20 px-4 py-3 text-sm font-semibold text-foreground">
+                                            <input
+                                                type="checkbox"
+                                                checked={completedItems.includes(skill)}
+                                                onChange={() => toggleItem(skill)}
+                                            />
+                                            <span className={completedItems.includes(skill) ? "line-through text-muted-foreground" : ""}>
+                                                {skill}
+                                            </span>
+                                        </label>
+                                    ))
+                                ) : (
+                                    <div className="rounded-2xl bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                                        Generate a career plan to see your recommended skills.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Weekly Study Tasks</h4>
+                            <div className="mt-3 grid gap-3">
+                                {careerPlan?.weeklyTasks?.length ? (
+                                    careerPlan.weeklyTasks.map((task, i) => (
+                                        <label key={i} className="flex items-center gap-3 rounded-2xl bg-muted/20 px-4 py-3 text-sm font-semibold text-foreground">
+                                            <input
+                                                type="checkbox"
+                                                checked={completedItems.includes(task)}
+                                                onChange={() => toggleItem(task)}
+                                            />
+                                            <span className={completedItems.includes(task) ? "line-through text-muted-foreground" : ""}>
+                                                {task}
+                                            </span>
+                                        </label>
+                                    ))
+                                ) : (
+                                    <div className="rounded-2xl bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                                        Generate a career plan to see your weekly study tasks.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {courses.map((course, idx) => (
                     <Card key={idx} className="group rounded-[2.5rem] border-border/40 bg-card/60 backdrop-blur-sm shadow-xl shadow-black/5 overflow-hidden hover:border-primary/30 transition-all duration-500">
                         <div className="flex flex-col lg:flex-row">
-                            {/* Course Image/Poster */}
                             <div className="lg:w-72 h-48 lg:h-auto relative overflow-hidden">
                                 <img
                                     src={course.image}
@@ -90,7 +211,6 @@ export function LearningShell() {
                                 </div>
                             </div>
 
-                            {/* Content Area */}
                             <div className="flex-1 p-8 lg:p-10 flex flex-col justify-between space-y-8">
                                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                                     <div className="space-y-1">
@@ -143,7 +263,6 @@ export function LearningShell() {
                 ))}
             </div>
 
-            {/* Upcoming/Locked Section */}
             <div className="pt-6">
                 <div className="flex items-center gap-4 mb-8">
                     <h3 className="text-2xl font-black tracking-tight">Future Aspirations</h3>

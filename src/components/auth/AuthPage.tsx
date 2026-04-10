@@ -18,6 +18,7 @@ export function AuthPage({ mode }: AuthPageProps) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [joinSkillExchange, setJoinSkillExchange] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +29,7 @@ export function AuthPage({ mode }: AuthPageProps) {
 
     try {
       if (mode === "signup") {
-        const response = await signup(fullName, email, password);
+        const response = await signup(fullName, email, password, joinSkillExchange);
         toast.success(response.message || "Account created. Check your inbox for the OTP.");
         navigate("/verify-email", { replace: true, state: { verificationEmail: email } });
         return;
@@ -49,9 +50,12 @@ export function AuthPage({ mode }: AuthPageProps) {
       console.error("Auth Transaction Failed:", error);
 
       const errorMessage = error.response?.data?.message || error.message || "Authentication Failed";
+      const statusCode = error.response?.status;
 
       if (!error.response && !error.message?.includes("Token")) {
         toast.error("Network or CORS error: check that the backend is running and the frontend URL is allowed.");
+      } else if (statusCode === 429) {
+        toast.error("Too many attempts. Please wait a few minutes, then try again.");
       } else if (errorMessage.includes("User already exists")) {
         toast.error("Identity Conflict: User already exists.");
       } else {
@@ -252,6 +256,24 @@ export function AuthPage({ mode }: AuthPageProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+
+                {!isLogin && (
+                  <label className="flex items-start gap-2 rounded-xl border border-[rgba(22,160,133,0.25)] bg-[rgba(20,37,62,0.55)] p-3 text-xs text-[rgba(189,216,233,0.85)]">
+                    <input
+                      type="checkbox"
+                      checked={joinSkillExchange}
+                      onChange={(e) => setJoinSkillExchange(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-[rgba(22,160,133,0.4)] bg-transparent"
+                    />
+                    <span>
+                      Join Skill Exchange.
+                      {" "}
+                      <Link to="/terms" className="font-bold text-[#16A085] underline underline-offset-4">
+                        Read terms
+                      </Link>
+                    </span>
+                  </label>
+                )}
 
                 <Button
                   type="submit"

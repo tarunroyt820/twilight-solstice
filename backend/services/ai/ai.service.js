@@ -1,110 +1,150 @@
-const groqService = require("./groq.service");
+const { Readable } = require("stream");
 const deepseekService = require("./deepseek.service");
-const nvidiaService = require("./nvidia.service");
+const groqService = require("./groq.service");
 
 let validateProviderConfig;
 try {
     ({ validateProviderConfig } = require("./aiConfig"));
 } catch (_error) {
-    // Demo-safe fallback validator if aiConfig helper is not present yet.
     validateProviderConfig = (provider) => {
-        const keyByProvider = {
-            groq: "GROQ_API_KEY",
-            // gemini: "GEMINI_API_KEY",
-            deepseek: "DEEPSEEK_API_KEY",
-            nvidia: "NVIDIA_API_KEY"
-        };
+        const resolved = (provider || process.env.AI_PROVIDER || "deepseek").toLowerCase();
 
-        const keyName = keyByProvider[provider];
-        if (!keyName) {
+        if (resolved !== "groq" && resolved !== "deepseek") {
             return {
                 valid: false,
                 code: "AI_PROVIDER_UNSUPPORTED",
-                message: `Unsupported AI provider: ${provider}`
+                message: `Unsupported AI provider: ${resolved}`
             };
         }
 
-        const value = process.env[keyName];
-        if (!value || value.startsWith("REPLACE_")) {
-            return {
-                valid: false,
-                code: "AI_NOT_CONFIGURED",
-                message: `${keyName} is missing for provider ${provider}`
-            };
+        if (resolved === "groq") {
+            const value = process.env.GROQ_API_KEY;
+            if (!value || value.startsWith("REPLACE_")) {
+                return {
+                    valid: false,
+                    code: "AI_NOT_CONFIGURED",
+                    message: "GROQ_API_KEY is missing for provider groq"
+                };
+            }
+        }
+
+        if (resolved === "deepseek") {
+            const value = process.env.HUGGINGFACE_API_KEY || process.env.HF_API_TOKEN;
+            if (!value || value.startsWith("REPLACE_")) {
+                return {
+                    valid: false,
+                    code: "AI_NOT_CONFIGURED",
+                    message: "HUGGINGFACE_API_KEY is missing for provider deepseek"
+                };
+            }
         }
 
         return { valid: true };
     };
 }
 
-// Priority order: DeepSeek -> NVIDIA -> Groq
-const providers = [
-    { name: "deepseek", service: deepseekService },
-    { name: "nvidia", service: nvidiaService },
-    { name: "groq", service: groqService }
-];
-
-/**
- * Main AI Gateway with optional fallback behavior.
- * Returns a structured result so callers can expose providerUsed safely.
- */
-const getAIResponse = async (prompt) => {
-    const selectedProvider = (process.env.AI_PROVIDER || "groq").toLowerCase();
-    const enableFallback = (process.env.AI_ENABLE_FALLBACK || "false").toLowerCase() === "true";
-
-    const primaryProvider = providers.find((p) => p.name === selectedProvider);
-    if (!primaryProvider) {
-        const unsupportedError = new Error(`Selected provider "${selectedProvider}" is not supported`);
-        unsupportedError.code = "AI_PROVIDER_UNSUPPORTED";
-        throw unsupportedError;
-    }
-
-    const primaryValidation = validateProviderConfig(selectedProvider);
-    if (!primaryValidation.valid) {
-        const configError = new Error(primaryValidation.message);
-        configError.code = primaryValidation.code;
-        throw configError;
-    }
-
-    try {
-        const text = await primaryProvider.service.generateResponse(prompt);
-        return { providerUsed: selectedProvider, text };
-    } catch (_error) {
-        if (!enableFallback) {
-            const providerError = new Error("AI provider unavailable");
-            providerError.code = "AI_PROVIDER_UNAVAILABLE";
-            throw providerError;
-        }
-    }
-
-    // Optional fallback chain: only runs when AI_ENABLE_FALLBACK=true.
-    for (const provider of providers) {
-        if (provider.name === selectedProvider) {
-            continue;
-        }
-
-        const validation = validateProviderConfig(provider.name);
-        if (!validation.valid) {
-            // Skip intentionally unconfigured providers to avoid noisy failures.
-            if (validation.code === "AI_NOT_CONFIGURED") {
-                continue;
-            }
-
-            // For other validation failures, skip and continue fallback attempts.
-            continue;
-        }
-
-        try {
-            const text = await provider.service.generateResponse(prompt);
-            return { providerUsed: provider.name, text };
-        } catch (_error) {
-            // Continue trying remaining configured providers.
-        }
-    }
-
-    const providerError = new Error("AI provider unavailable");
-    providerError.code = "AI_PROVIDER_UNAVAILABLE";
-    throw providerError;
+const withTimeout = (promise, ms, label) => {
+    const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    );
+    return Promise.race([promise, timeout]);
 };
 
-module.exports = { getAIResponse };
+const AI_TIMEOUT_MS = Number(process.env.AI_TIMEOUT_MS || 60000);
+
+const callProvider = async (provider, message, options = {}) => {
+    const normalized = (provider || process.env.AI_PROVIDER || "deepseek").toLowerCase();
+    const validation = validateProviderConfig(normalized);
+    if (!validation.valid) {
+        const error = new Error(validation.message);
+        error.code = validation.code;
+        throw error;
+    }
+
+    if (normalized === "deepseek") {
+        return deepseekService.generateResponse(message, options);
+    }
+
+    if (normalized === "groq") {
+        return groqService.generateResponse(message, options);
+    }
+
+    const error = new Error(`Unsupported AI provider: ${normalized}`);
+    error.code = "AI_PROVIDER_UNSUPPORTED";
+    throw error;
+};
+
+const normalizeOptions = (preferredProvider) => {
+    if (!preferredProvider) {
+        return {
+            provider: process.env.AI_PROVIDER || "deepseek",
+            model: undefined,
+        };
+    }
+
+    if (typeof preferredProvider === "string") {
+        return {
+            provider: preferredProvider,
+            model: undefined,
+        };
+    }
+
+    return {
+        provider: preferredProvider.provider || process.env.AI_PROVIDER || "deepseek",
+        model: preferredProvider.model,
+    };
+};
+
+const generate = async (message, preferredProvider) => {
+    const normalized = normalizeOptions(preferredProvider);
+    const provider = (normalized.provider || process.env.AI_PROVIDER || "deepseek").toLowerCase();
+
+    try {
+        console.log(`[AI SERVICE] Trying provider: ${provider}${normalized.model ? ` model: ${normalized.model}` : ""} (timeout: ${AI_TIMEOUT_MS}ms)`);
+        const text = await withTimeout(callProvider(provider, message, { model: normalized.model }), AI_TIMEOUT_MS, provider);
+        console.log(`[AI SERVICE] Success with: ${provider}`);
+        return { providerUsed: provider, modelUsed: normalized.model, text };
+    } catch (err) {
+        console.warn(`[AI SERVICE] ${provider} failed: ${err.message}`);
+        const error = new Error(err.message || "AI provider failed");
+        error.code = err.code || "AI_PROVIDER_UNAVAILABLE";
+        error.status = err.status || 503;
+        error.details = err.details || null;
+        throw error;
+    }
+};
+
+const generateStream = async (message, preferredProvider) => {
+    const normalized = normalizeOptions(preferredProvider);
+    const provider = (normalized.provider || process.env.AI_PROVIDER || "deepseek").toLowerCase();
+
+    if (provider === "deepseek" && typeof deepseekService.generateResponseStream === "function") {
+        try {
+            console.log(`[AI SERVICE] Streaming with provider: ${provider}${normalized.model ? ` model: ${normalized.model}` : ""}`);
+            return await deepseekService.generateResponseStream(message, { model: normalized.model });
+        } catch (err) {
+            console.warn(`[AI SERVICE] ${provider} stream failed: ${err.message}`);
+            const error = new Error(err.message || "AI provider stream failed");
+            error.code = err.code || "AI_PROVIDER_UNAVAILABLE";
+            error.status = err.status || 503;
+            error.details = err.details || null;
+            throw error;
+        }
+    }
+
+    const result = await generate(message, preferredProvider);
+    const parts = (result.text || "").match(/.{1,80}(\s|$)|\S+/g) || [result.text || ""];
+
+    async function* chunkGenerator() {
+        for (const part of parts) {
+            await new Promise((resolve) => setTimeout(resolve, 35));
+            yield part;
+        }
+    }
+
+    return Readable.from(chunkGenerator());
+};
+
+const getAIResponse = async (prompt) => generate(prompt, process.env.AI_PROVIDER || "deepseek");
+
+module.exports = { generate, generateStream, getAIResponse };

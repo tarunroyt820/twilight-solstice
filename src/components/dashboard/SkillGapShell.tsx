@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Brain, Sparkles, Target } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/common/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { askAI } from "@/services/aiApi";
+import { getCareerPlan } from "@/services/careerPlanApi";
+import { getProfile } from "@/services/profileApi";
+import { CareerPlan } from "@/types/careerPlan";
+import { UserProfile } from "@/types/profile";
 
 const TARGET_ROLES = [
   "Senior Frontend Engineer",
@@ -19,6 +23,51 @@ export function SkillGapShell() {
   const [customRole, setCustomRole] = useState("");
   const [analysis, setAnalysis] = useState("");
   const [loading, setLoading] = useState(false);
+  const [careerPlan, setCareerPlan] = useState<CareerPlan | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [skillGaps, setSkillGaps] = useState<string[]>([]);
+  const [matchedSkills, setMatchedSkills] = useState<string[]>([]);
+
+  useEffect(() => {
+    Promise.all([getCareerPlan(), getProfile()])
+      .then(([plan, profile]) => {
+        setCareerPlan(plan);
+        setUserProfile(profile);
+        if (plan.skillGapAnalysis?.length > 0) {
+          setAnalysis(plan.skillGapAnalysis.map((gap) => `- ${gap}`).join("\n"));
+        }
+      })
+      .catch(async () => {
+        try {
+          const profile = await getProfile();
+          setUserProfile(profile);
+        } catch {
+          // Handle gracefully.
+        }
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!careerPlan || !userProfile) return;
+
+    const required = careerPlan.recommendedSkills || [];
+    const userSkills = (userProfile.skills || []).map((skill) => skill.toLowerCase());
+
+    const gaps = required.filter((skill) => !userSkills.includes(skill.toLowerCase()));
+    const matched = required.filter((skill) => userSkills.includes(skill.toLowerCase()));
+
+    setSkillGaps(gaps);
+    setMatchedSkills(matched);
+  }, [careerPlan, userProfile]);
+
+  const fetchSkillGapFromAI = async (role: string) => {
+    const result = await askAI(
+      `Perform a detailed skill gap analysis for me if I want to become a ${role}. Based on my current profile skills, tell me: 1) Skills I already have that are relevant, 2) Skills I am missing, 3) A prioritised learning plan with estimated timeframes. Format clearly using markdown.`,
+      { provider: "deepseek" },
+    );
+
+    setAnalysis(result.answer);
+  };
 
   const runAnalysis = async () => {
     const role = customRole || targetRole;
@@ -31,11 +80,11 @@ export function SkillGapShell() {
     setLoading(true);
 
     try {
-      const result = await askAI(
-        `Perform a detailed skill gap analysis for me if I want to become a ${role}. Based on my current profile skills, tell me: 1) Skills I already have that are relevant, 2) Skills I am missing, 3) A prioritised learning plan with estimated timeframes. Format clearly using markdown.`,
-      );
-
-      setAnalysis(result.answer);
+      if (careerPlan && (careerPlan.skillGapAnalysis?.length ?? 0) > 0) {
+        setAnalysis((careerPlan.skillGapAnalysis ?? []).map((gap) => `- ${gap}`).join("\n"));
+      } else {
+        await fetchSkillGapFromAI(role);
+      }
     } catch {
       toast.error("Analysis failed. Please try again.");
     } finally {
@@ -112,6 +161,55 @@ export function SkillGapShell() {
           </div>
         </CardContent>
       </Card>
+
+      {skillGaps.length > 0 || matchedSkills.length > 0 ? (
+        <Card className="rounded-[2.5rem] border-border/40 bg-card/60 backdrop-blur-sm">
+          <CardHeader className="p-8">
+            <CardTitle className="flex items-center gap-3">
+              <Brain className="h-6 w-6 text-primary" />
+              Plan vs Profile Comparison
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-6 p-8 pt-0 md:grid-cols-2">
+            <div className="rounded-3xl bg-muted/20 p-6">
+              <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Skills You Have</h3>
+              <div className="mt-4 space-y-2">
+                {matchedSkills.length ? (
+                  matchedSkills.map((skill, index) => (
+                    <p key={index} className="text-sm font-semibold text-foreground">{skill}</p>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No matched skills found yet.</p>
+                )}
+              </div>
+            </div>
+            <div className="rounded-3xl bg-muted/20 p-6">
+              <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Skills You Need</h3>
+              <div className="mt-4 space-y-2">
+                {skillGaps.length ? (
+                  skillGaps.map((skill, index) => (
+                    <p key={index} className="text-sm font-semibold text-foreground">{skill}</p>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">Your saved plan skills are already covered.</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : careerPlan ? (
+        <Card className="rounded-[2.5rem] border-border/40 bg-card/60 backdrop-blur-sm">
+          <CardContent className="p-8">
+            <p className="text-sm font-medium text-muted-foreground">Loading your skill gap analysis...</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="rounded-[2.5rem] border-border/40 bg-card/60 backdrop-blur-sm">
+          <CardContent className="p-8">
+            <p className="text-sm font-medium text-muted-foreground">Generate a career plan first to see your skill gaps.</p>
+          </CardContent>
+        </Card>
+      )}
 
       {analysis && (
         <Card className="rounded-[2.5rem] border-primary/20 bg-card/60 backdrop-blur-sm">

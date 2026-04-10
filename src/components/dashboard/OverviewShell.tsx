@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { ProgressBar } from "@/components/common/ProgressBar";
+import { getCareerPlan } from "@/services/careerPlanApi";
+import { CareerPlan } from "@/types/careerPlan";
 import { getOverviewData } from "@/services/overviewApi";
 import { DashboardOverviewData, OverviewActivityType } from "@/types/overview";
 
@@ -52,7 +54,15 @@ const getTrajectoryLabel = (status: DashboardOverviewData["trajectory"]["status"
 
 export function OverviewShell() {
     const [overview, setOverview] = useState<DashboardOverviewData | null>(null);
+    const [careerPlan, setCareerPlan] = useState<CareerPlan | null>(null);
+    const [planLoading, setPlanLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const getMilestoneProgress = (milestones: CareerPlan["milestones"] = []) => {
+        if (!milestones || milestones.length === 0) return 0;
+        const completed = milestones.filter((milestone) => milestone.completed).length;
+        return Math.round((completed / milestones.length) * 100);
+    };
 
     useEffect(() => {
         let mounted = true;
@@ -72,6 +82,17 @@ export function OverviewShell() {
         return () => {
             mounted = false;
         };
+    }, []);
+
+    useEffect(() => {
+        getCareerPlan()
+            .then((plan) => setCareerPlan(plan))
+            .catch(() => {
+                setCareerPlan(null);
+            })
+            .finally(() => {
+                setPlanLoading(false);
+            });
     }, []);
 
     if (error) {
@@ -152,6 +173,52 @@ export function OverviewShell() {
                 ))}
             </div>
 
+            <Card className="rounded-[2.5rem] border border-[rgba(22,160,133,0.20)] bg-card/60 backdrop-blur-sm shadow-xl shadow-black/5">
+                <CardHeader className="p-8 pb-4">
+                    <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
+                        <Target className="h-6 w-6 text-primary" />
+                        Career Plan Summary
+                    </CardTitle>
+                    <CardDescription className="text-base font-medium">
+                        Progress synced from your saved plan.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 pt-0">
+                    {planLoading ? (
+                        <p className="text-sm font-medium text-muted-foreground">Loading your career plan...</p>
+                    ) : careerPlan ? (
+                        <div className="grid gap-6 md:grid-cols-3">
+                            <div className="rounded-3xl border border-border/40 bg-muted/20 p-6">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Your Career Goal</h3>
+                                <p className="mt-3 text-lg font-bold text-foreground">{careerPlan.careerGoal}</p>
+                            </div>
+                            <div className="rounded-3xl border border-border/40 bg-muted/20 p-6">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Milestone Progress</h3>
+                                <p className="mt-3 text-lg font-bold text-foreground">
+                                    {getMilestoneProgress(careerPlan.milestones)}% complete
+                                </p>
+                            </div>
+                            <div className="rounded-3xl border border-border/40 bg-muted/20 p-6">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">This Week</h3>
+                                {careerPlan.weeklyTasks?.slice(0, 3).length ? (
+                                    <ul className="mt-3 space-y-2 text-sm font-semibold text-foreground">
+                                        {careerPlan.weeklyTasks.slice(0, 3).map((task, index) => (
+                                            <li key={index}>{task}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="mt-3 text-sm font-medium text-muted-foreground">No weekly tasks added yet.</p>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-sm font-medium text-muted-foreground">
+                            No career plan yet. Go to Career Path to generate one.
+                        </p>
+                    )}
+                </CardContent>
+            </Card>
+
             <div className="grid gap-8 grid-cols-1 xl:grid-cols-3">
                 <Card className="rounded-[2.5rem] border border-[rgba(22,160,133,0.20)] bg-card/60 backdrop-blur-sm shadow-xl shadow-black/5 hover:border-[rgba(22,160,133,0.40)] hover:shadow-[0_0_30px_rgba(22,160,133,0.10)] lg:col-span-2 overflow-hidden transition-all duration-300">
                     <CardHeader className="p-8">
@@ -164,7 +231,9 @@ export function OverviewShell() {
                                 {getTrajectoryLabel(overview.trajectory.status)}
                             </div>
                         </div>
-                        <CardDescription className="text-base font-medium">{overview.trajectory.subtitle}</CardDescription>
+                        <CardDescription className="text-base font-medium">
+                            {careerPlan ? careerPlan.careerGoal : overview.trajectory.subtitle}
+                        </CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 pt-0 space-y-10">
                         <div className="relative pt-2">
@@ -181,7 +250,7 @@ export function OverviewShell() {
                         <div className="grid gap-4 sm:grid-cols-3">
                             {[
                                 { label: "Current Node", value: overview.trajectory.currentNode, icon: Zap },
-                                { label: "Career Goal", value: overview.trajectory.careerGoal, icon: TrendingUp },
+                                { label: "Career Goal", value: careerPlan ? careerPlan.careerGoal : overview.trajectory.careerGoal, icon: TrendingUp },
                                 { label: "Sections", value: `${overview.trajectory.sectionsCompleted} / ${overview.trajectory.sectionsTotal}`, icon: Award },
                             ].map((box, i) => (
                                 <div key={i} className="group rounded-3xl border border-border/40 bg-muted/20 p-6 transition-all hover:bg-muted/30">
@@ -258,12 +327,19 @@ export function OverviewShell() {
                                 </div>
                                 <div className="space-y-1">
                                     <CardTitle className="text-3xl font-black tracking-tight text-foreground">AI Recommendations</CardTitle>
-                                    <CardDescription className="text-lg font-medium">Suggestions based on the user’s current profile</CardDescription>
+                                    <CardDescription className="text-lg font-medium">Suggestions based on the user's current profile</CardDescription>
                                 </div>
                             </div>
                             <Button variant="outline" className="rounded-2xl h-12 px-6 font-bold border-border bg-transparent hover:bg-muted/50 transition-all">
                                 Refresh Recommendations
                             </Button>
+                        </div>
+                        <div className="px-10 pb-0">
+                            {careerPlan ? (
+                                <p className="text-sm font-medium text-muted-foreground">{careerPlan.careerGoal}</p>
+                            ) : (
+                                <p className="text-sm font-medium text-muted-foreground">Generate a career plan to see your progress here.</p>
+                            )}
                         </div>
                     </CardHeader>
                     <CardContent className="p-10">

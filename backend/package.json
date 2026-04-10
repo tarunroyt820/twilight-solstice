@@ -6,6 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "migrate:skill-exchange-defaults": "node scripts/addSkillExchangeDefaults.js",
+    "test:exchange-services": "node scripts/test_exchange_services.js",
+    "test:notification-hooks": "node scripts/test_notification_hooks.js",
+    "chat": "node scripts/chat_cli.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -18,15 +22,17 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
-    "groq-sdk": "^0.37.0",
+    "groq-sdk": "^0.30.0",
     "helmet": "^8.1.0",
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.3",
+    "mammoth": "^1.12.0",
     "mongodb": "^7.1.0",
     "mongoose": "^9.1.6",
     "morgan": "^1.10.1",
+    "node-cron": "^4.2.1",
     "nodemailer": "^8.0.2",
-    "openai": "^6.18.0",
+    "pdf-parse": "^2.4.5",
     "xss-clean": "^0.1.4"
   }
 }

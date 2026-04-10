@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "./http";
 import { UserProfile } from "@/types/profile";
 
 const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/profile`;
@@ -38,6 +38,25 @@ export const getPublicProfile = async (id: string): Promise<UserProfile> => {
         return response.data;
     } catch (error) {
         console.error("Error fetching public profile from API:", error);
+        throw error;
+    }
+};
+
+export const uploadProfilePhoto = async (file: File): Promise<UserProfile> => {
+    try {
+        const formData = new FormData();
+        formData.append("photo", file);
+
+        const response = await axios.post<{ message: string; profile: UserProfile }>(`${API_URL}/photo`, formData, {
+            headers: {
+                ...getAuthHeader(),
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        return response.data.profile;
+    } catch (error) {
+        console.error("Error uploading profile photo:", error);
         throw error;
     }
 };

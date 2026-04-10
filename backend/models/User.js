@@ -66,6 +66,44 @@ const UserSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    credits: {
+        type: Number,
+        default: 10,
+        min: [0, 'Credits cannot be negative']
+    },
+    trustScore: {
+        type: Number,
+        default: 100,
+        min: [0, 'Trust score cannot be negative']
+    },
+    activeExchangeCount: {
+        type: Number,
+        default: 0,
+        min: [0, 'Active exchange count cannot be negative'],
+        validate: {
+            validator: function validator(v) {
+                return v <= 3;
+            },
+            message: 'Active exchange count cannot exceed 3'
+        }
+    },
+    noShowCount: {
+        type: Number,
+        default: 0,
+        min: [0, 'No-show count cannot be negative']
+    },
+    blockedUsers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    agreedToSkillTerms: {
+        type: Boolean,
+        default: false
+    },
+    profilePhotoUrl: {
+        type: String,
+        default: ''
+    },
     createdAt: {
         type: Date,
         default: Date.now

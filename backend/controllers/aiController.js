@@ -1,47 +1,174 @@
-const User = require('../models/User');
+﻿const User = require('../models/User');
 const Message = require('../models/Message');
+const CareerPlan = require('../models/CareerPlan');
 const aiService = require('../services/ai/ai.service');
+const profileCache = require('../utils/profileCache');
+const { getProvider } = require('../utils/providerRouter');
 
-/**
- * Handle user questions using AI and MongoDB profile context
- * @route POST /api/ai/ask
- * @access Private
- */
+const timer = (label) => {
+    const start = Date.now();
+    return () => {
+        const duration = Date.now() - start;
+        console.log(`[LATENCY] ${label}: ${duration}ms`);
+        return duration;
+    };
+};
 
-// Handle user question and AI response
+const buildCompactProfile = (profile) => {
+    return `User: ${profile.fullName || 'Unknown'}. Role: ${profile.jobTitle || 'Not set'}. Goal: ${profile.careerGoal || 'Not set'}. Skills: ${(profile.skills || []).slice(0, 5).join(', ')}.`;
+};
+
+const buildPlanContext = (plan) => {
+    if (!plan) return 'The user does not have a career plan yet.';
+    return [
+        `Career Goal: ${plan.careerGoal}`,
+        `Milestones: ${plan.milestones?.map((milestone) => milestone.title).join(', ') || 'none'}`,
+        `Skills Needed: ${plan.recommendedSkills?.slice(0, 5).join(', ') || 'none'}`,
+        `Weekly Tasks: ${plan.weeklyTasks?.slice(0, 3).join(', ') || 'none'}`
+    ].join(' | ');
+};
+
+const buildCompactContext = (profile, plan) => {
+    const parts = [
+        profile?.name ? `Name: ${profile.name}` : null,
+        profile?.fullName ? `Name: ${profile.fullName}` : null,
+        profile?.currentRole ? `Role: ${profile.currentRole}` : null,
+        profile?.jobTitle ? `Role: ${profile.jobTitle}` : null,
+        plan?.careerGoal ? `Goal: ${plan.careerGoal}` : null,
+        profile?.careerGoal && !plan?.careerGoal ? `Goal: ${profile.careerGoal}` : null,
+        profile?.skills?.length ? `Skills: ${profile.skills.slice(0, 4).join(', ')}` : null
+    ].filter(Boolean);
+
+    const context = [...new Set(parts)].join('. ');
+    console.log(`[PROMPT] context length: ${context.length} chars`);
+    return context;
+};
+
+const buildLocalFallbackAnswer = (question, profile, plan) => {
+    const name = profile?.fullName || profile?.name || "there";
+    const goal = plan?.careerGoal || profile?.careerGoal || "your next career milestone";
+    const skills = profile?.skills?.slice(0, 4) || [];
+    const missingSkills = plan?.recommendedSkills?.slice(0, 3) || [];
+
+    return [
+        `Hi ${name}, DeepSeek is temporarily unavailable, so I am giving you a quick fallback answer based on your profile.`,
+        "",
+        `Question: ${question}`,
+        "",
+        `Recommended focus:`,
+        `- Primary goal: ${goal}`,
+        `- Strengths to build on: ${skills.length ? skills.join(", ") : "your existing profile strengths"}`,
+        `- Next skills to develop: ${missingSkills.length ? missingSkills.join(", ") : "communication, project depth, and portfolio proof"}`,
+        `- Immediate next step: choose one project or learning task today that moves you closer to ${goal}`,
+        "",
+        `If you want, ask again in a minute and I will retry the full DeepSeek-powered response.`
+    ].join("\n");
+};
+
+const isFallbackEnabled = () => String(process.env.AI_ENABLE_FALLBACK || 'false').toLowerCase() === 'true';
+
+const MAX_HISTORY_TURNS = 6;
+const MAX_HISTORY_CHARS_PER_MESSAGE = 500;
+
+const buildTrimmedHistory = (fullHistory) => {
+    if (!fullHistory || fullHistory.length === 0) return [];
+
+    const recent = fullHistory
+        .slice(-MAX_HISTORY_TURNS)
+        .map((message) => {
+            const raw = String(message.content || '');
+            const isFallback = raw.includes('DeepSeek is temporarily unavailable');
+            const normalized = isFallback
+                ? '[Previous fallback response omitted to keep prompt compact.]'
+                : raw;
+
+            return {
+                role: message.role,
+                content: normalized.slice(0, MAX_HISTORY_CHARS_PER_MESSAGE)
+            };
+        });
+
+    if (fullHistory.length > MAX_HISTORY_TURNS) {
+        const older = fullHistory.slice(0, -MAX_HISTORY_TURNS);
+        const summary = {
+            role: 'system',
+            content: `Earlier in this conversation the user discussed: ${older.map((message) => message.content).join(' ').slice(0, 300)}...`
+        };
+        return [summary, ...recent];
+    }
+
+    return recent;
+};
+
 exports.askAI = async (req, res) => {
     try {
-        const { question } = req.body;
+        const question = req.body.question || req.body.message;
         const userId = req.user.id;
+        const preferredProvider = (req.body.provider || '').toLowerCase();
 
         if (!question) {
             return res.status(400).json({ message: "Question is required" });
         }
 
-        // 1. Save User Message to DB
+        let existingPlan = null;
+        try {
+            const endPlanFetch = timer('career_plan_fetch');
+            existingPlan = await CareerPlan.findOne({ userId }).lean();
+            endPlanFetch();
+        } catch {
+            // non-critical — continue without plan context
+        }
+
+        const endUserSave = timer('user_message_save');
         await Message.create({
             userId,
             role: 'user',
             content: question
         });
+        endUserSave();
 
-        // 2. Fetch User Profile for context
-        const user = await User.findById(userId);
-        if (!user) {
+        let userProfile = profileCache.get(req.user.id);
+        if (!userProfile) {
+            const endProfileFetch = timer('profile_fetch_db');
+            userProfile = await User.findById(req.user.id).lean();
+            endProfileFetch();
+            profileCache.set(req.user.id, userProfile);
+        } else {
+            console.log('[CACHE] profile_fetch: served from cache');
+        }
+
+        if (!userProfile) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // 3. Construct the personalized prompt
-        const prompt = `
+        const endHistoryFetch = timer('chat_history_fetch');
+        const chatHistory = await Message.find({ userId }).sort({ timestamp: 1 }).lean();
+        endHistoryFetch();
+
+        const trimmedHistory = buildTrimmedHistory(
+            chatHistory.map((message) => ({
+                role: message.role,
+                content: message.content
+            }))
+        );
+        console.log(`[HISTORY] sending ${trimmedHistory.length} turns to model`);
+
+        const compactContext = buildCompactContext(userProfile, existingPlan);
+
+        // Legacy full prompt — replaced for performance
+        // const systemPrompt = `You are a career guidance AI. ${buildCompactProfile(userProfile)} ${buildPlanContext(existingPlan)}`;
+        const systemPrompt = `You are a career guidance AI assistant. Current plan: ${buildPlanContext(existingPlan)}. ${compactContext}. Help the user refine, update, or act on their plan. Be concise.`;
+
+        const legacyPrompt = `
             The following is the professional profile of a student/professional using Nextro Career Pathfinder.
         
             USER PROFILE CONTEXT:
-            - Full Name: ${user.fullName}
-            - Current Job Title: ${user.jobTitle || "Student/Aspiring Professional"}
-            - Experience Level: ${user.experienceLevel || "Not Specified"}
-            - Career Goal: ${user.careerGoal || "Not specified yet"}
-            - Skills: ${user.skills && user.skills.length > 0 ? user.skills.join(", ") : "None listed yet"}
-            - Education: ${user.education.degree || "N/A"} from ${user.education.college || "N/A"} (Graduation: ${user.education.graduationYear || "N/A"})
+            - Full Name: ${userProfile.fullName}
+            - Current Job Title: ${userProfile.jobTitle || "Student/Aspiring Professional"}
+            - Experience Level: ${userProfile.experienceLevel || "Not Specified"}
+            - Career Goal: ${userProfile.careerGoal || "Not specified yet"}
+            - Skills: ${userProfile.skills && userProfile.skills.length > 0 ? userProfile.skills.join(", ") : "None listed yet"}
+            - Education: ${userProfile.education?.degree || "N/A"} from ${userProfile.education?.college || "N/A"} (Graduation: ${userProfile.education?.graduationYear || "N/A"})
         
             INSTRUCTIONS:
             - Provide clear, personalized career guidance based strictly on the profile provided.
@@ -55,26 +182,88 @@ exports.askAI = async (req, res) => {
             AI RESPONSE:
         `;
 
-        // 4. Get response from the configured AI provider
+        const prompt = [
+            `SYSTEM PROMPT: ${systemPrompt}`,
+            trimmedHistory.length ? `RECENT CHAT HISTORY:\n${trimmedHistory.map((msg) => `${msg.role.toUpperCase()}: ${msg.content}`).join('\n')}` : '',
+            `USER QUESTION:\n"${question}"`,
+        ].filter(Boolean).join('\n\n');
+
         try {
-            const result = await aiService.getAIResponse(prompt);
+            const { provider: routedProvider, model: routedModel, intent } = getProvider(question);
+            const provider = preferredProvider || routedProvider;
+            console.log(`[ROUTER] intent: ${intent} -> provider: ${provider} -> model: ${routedModel}`);
+            const endAiCall = timer('ai_provider_call');
+            let result;
+            try {
+                result = await aiService.generate(prompt, { provider, model: routedModel });
+            } catch (primaryError) {
+                // Retry once with a compact prompt to avoid token/latency spikes on long chat histories.
+                const compactRetryPrompt = [
+                    `SYSTEM: You are a concise career guidance AI.`,
+                    `PROFILE: ${buildCompactProfile(userProfile)}`,
+                    `PLAN: ${buildPlanContext(existingPlan)}`,
+                    `QUESTION: ${question}`
+                ].join('\n');
+                result = await aiService.generate(compactRetryPrompt, { provider, model: routedModel });
+            }
+            endAiCall();
             const answer = result && result.text ? result.text : String(result);
 
-            // 5. Save AI Response to DB
+            if (answer.includes('"careerGoal"')) {
+                try {
+                    const raw = answer.replace(/```json|```/g, '').trim();
+                    const updatedPlan = JSON.parse(raw);
+                    await CareerPlan.findOneAndUpdate(
+                        { userId: req.user.id },
+                        { ...updatedPlan, lastUpdated: new Date() },
+                        { upsert: true, new: true }
+                    );
+                    console.log('[AI ASSISTANT] Career plan updated from chat');
+                } catch {
+                    // response was not a plan update — that is fine
+                }
+            }
+
+            const endResponseSave = timer('ai_response_save');
             await Message.create({
                 userId,
                 role: 'assistant',
                 content: answer
             });
+            endResponseSave();
 
-            // 6. Respond
             res.json({
                 answer,
-                success: true
+                success: true,
+                providerUsed: result.providerUsed,
+                modelUsed: result.modelUsed
             });
         } catch (error) {
             console.error("AI Controller Error:", error);
-            res.status(error.code === 'AI_NOT_CONFIGURED' ? 503 : 500).json({
+            if (error.details) {
+                console.error("AI Controller Error Details:", error.details);
+            }
+            if (error.code === 'AI_PROVIDER_UNAVAILABLE' && isFallbackEnabled()) {
+                const fallbackAnswer = buildLocalFallbackAnswer(question, userProfile, existingPlan);
+
+                await Message.create({
+                    userId,
+                    role: 'assistant',
+                    content: fallbackAnswer
+                });
+
+                return res.json({
+                    answer: fallbackAnswer,
+                    success: true,
+                    providerUsed: 'nextaro-local-fallback',
+                    fallback: true
+                });
+            }
+            const statusCode = (
+                error.code === 'AI_NOT_CONFIGURED' ||
+                error.code === 'AI_PROVIDER_UNAVAILABLE'
+            ) ? 503 : 500;
+            res.status(statusCode).json({
                 success: false,
                 code: error.code || "AI_FAILED",
                 message: error.message || "AI service temporarily unavailable"
@@ -89,11 +278,137 @@ exports.askAI = async (req, res) => {
     }
 };
 
-// Fetch chat history for the user
+exports.streamChat = async (req, res) => {
+    const message = req.body.message || req.query.message;
+    const preferredProvider = (req.body.provider || req.query.provider || '').toLowerCase();
+    const { provider: routedProvider, model: routedModel, intent } = getProvider(message || "");
+    const provider = preferredProvider || routedProvider;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    try {
+        console.log(`[ROUTER] intent: ${intent} -> provider: ${provider} -> model: ${routedModel}`);
+        const endAiCall = timer('ai_provider_stream_call');
+        const stream = await aiService.generateStream(message, { provider, model: routedModel });
+        endAiCall();
+
+        stream.on('data', (chunk) => {
+            res.write(`data: ${JSON.stringify({ text: chunk.toString() })}\n\n`);
+        });
+        stream.on('end', () => {
+            res.write('data: [DONE]\n\n');
+            res.end();
+        });
+        stream.on('error', (err) => {
+            res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+            res.end();
+        });
+    } catch (err) {
+        console.error("streamChat Error:", err);
+        const statusCode = (
+            err.code === 'AI_NOT_CONFIGURED' ||
+            err.code === 'AI_PROVIDER_UNAVAILABLE'
+        ) ? 503 : 500;
+        res.status(statusCode).json({
+            error: err.message || 'Streaming failed',
+            code: err.code || 'AI_STREAM_FAILED'
+        });
+    }
+};
+
+exports.generateCareerPlan = async (req, res) => {
+    try {
+        let userProfile = profileCache.get(req.user.id);
+        if (!userProfile) {
+            const endProfileFetch = timer('profile_fetch_db');
+            userProfile = await User.findById(req.user.id).lean();
+            endProfileFetch();
+            profileCache.set(req.user.id, userProfile);
+        } else {
+            console.log('[CACHE] profile_fetch: served from cache');
+        }
+
+        if (!userProfile) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const prompt = `
+            PROFILE SUMMARY:
+            ${buildCompactProfile(userProfile)}
+
+            You are a career guidance AI. Based on the user profile provided, generate a structured career plan.
+            You MUST respond with only a valid JSON object. No markdown, no explanation, no extra text.
+            Follow this exact schema:
+            {
+              "careerGoal": "string - the main career goal",
+              "milestones": [
+                { "title": "string", "description": "string", "dueDate": "string e.g. Month Year" }
+              ],
+              "weeklyTasks": ["string", "string"],
+              "recommendedSkills": ["string", "string"],
+              "recommendedCourses": ["string", "string"],
+              "skillGapAnalysis": ["string - one gap per item"]
+            }
+        `;
+
+        const roadmapModel = process.env.DEEPSEEK_HEAVY_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-ai/DeepSeek-R1';
+        console.log(`[ROUTER] intent: roadmap -> provider: deepseek -> model: ${roadmapModel}`);
+        const endAiCall = timer('career_plan_ai_call');
+        const result = await aiService.generate(prompt, {
+            provider: 'deepseek',
+            model: roadmapModel
+        });
+        endAiCall();
+        const aiResponse = result && result.text ? result.text : String(result);
+
+        let careerPlan;
+        try {
+            const raw = aiResponse.replace(/```json|```/g, '').trim();
+            careerPlan = JSON.parse(raw);
+        } catch (err) {
+            return res.status(500).json({ error: 'AI returned invalid plan format. Please try again.' });
+        }
+
+        const endPlanSave = timer('career_plan_save');
+        const savedPlan = await CareerPlan.findOneAndUpdate(
+            { userId: req.user.id },
+            {
+                ...careerPlan,
+                userId: req.user.id,
+                providerUsed: result.providerUsed,
+                lastUpdated: new Date()
+            },
+            { upsert: true, new: true }
+        );
+        endPlanSave();
+
+        res.json({
+            success: true,
+            answer: aiResponse,
+            savedPlan
+        });
+    } catch (error) {
+        console.error("Generate Career Plan Error:", error);
+        const statusCode = (
+            error.code === 'AI_NOT_CONFIGURED' ||
+            error.code === 'AI_PROVIDER_UNAVAILABLE'
+        ) ? 503 : 500;
+        res.status(statusCode).json({
+            success: false,
+            code: error.code || "AI_FAILED",
+            message: error.message || "AI service temporarily unavailable"
+        });
+    }
+};
+
 exports.getHistory = async (req, res) => {
     try {
         const userId = req.user.id;
+        const endHistoryFetch = timer('history_fetch');
         const messages = await Message.find({ userId }).sort({ timestamp: 1 });
+        endHistoryFetch();
         res.json({
             success: true,
             messages
@@ -106,3 +421,4 @@ exports.getHistory = async (req, res) => {
         });
     }
 };
+

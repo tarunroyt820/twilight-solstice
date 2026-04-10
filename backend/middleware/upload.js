@@ -18,4 +18,17 @@ const storage = multer.diskStorage({
     }
 });
 
-module.exports = multer({ storage });
+const fileFilter = (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.mimetype)) {
+        cb(new Error('Only JPG, PNG, and WEBP files are allowed'));
+        return;
+    }
+    cb(null, true);
+};
+
+module.exports = multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: 3 * 1024 * 1024 }
+});

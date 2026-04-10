@@ -15,12 +15,19 @@ import { VerifyEmailPage } from "./components/auth/VerifyEmailPage";
 import { ForgotPasswordPage } from "./components/auth/ForgotPasswordPage";
 import { ResetPasswordPage } from "./components/auth/ResetPasswordPage";
 import { Dashboard } from "./components/dashboard/Dashboard";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { ProtectedRoute, hasValidToken } from "./components/auth/ProtectedRoute";
 import { Toaster } from "sonner";
+import { TermsPage } from "./components/skill-exchange/TermsPage";
+import { SkillProfileSetupPage } from "./components/skill-exchange/SkillProfileSetupPage";
+import { SkillAvailabilityPage } from "./components/skill-exchange/SkillAvailabilityPage";
+import { SkillMatchesPage } from "./components/skill-exchange/SkillMatchesPage";
+import { SkillPublicProfilePage } from "./components/skill-exchange/SkillPublicProfilePage";
+import { SkillRequestsPage } from "./components/skill-exchange/SkillRequestsPage";
+import { SkillExchangesPage } from "./components/skill-exchange/SkillExchangesPage";
+import { SkillNotificationsPage } from "./components/skill-exchange/SkillNotificationsPage";
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-    const token = localStorage.getItem("nextro_token");
-    if (token) return <Navigate to="/dashboard/overview" replace />;
+    if (hasValidToken()) return <Navigate to="/dashboard/overview" replace />;
     return children;
 };
 
@@ -56,11 +63,19 @@ export default function App() {
                 <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/profile/:userId" element={<SkillPublicProfilePage />} />
 
                 {/* Protected Dashboard Routes */}
                 <Route element={<ProtectedRoute />}>
                     <Route path="/dashboard/*" element={<Dashboard />} />
                     <Route path="/onboarding" element={<OnboardingFlow />} />
+                    <Route path="/profile/skills" element={<SkillProfileSetupPage />} />
+                    <Route path="/profile/availability" element={<SkillAvailabilityPage />} />
+                    <Route path="/matches" element={<SkillMatchesPage />} />
+                    <Route path="/requests" element={<SkillRequestsPage />} />
+                    <Route path="/exchanges" element={<SkillExchangesPage />} />
+                    <Route path="/notifications" element={<SkillNotificationsPage />} />
                 </Route>
 
                 {/* 404 */}

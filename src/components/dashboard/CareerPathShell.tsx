@@ -5,6 +5,8 @@ import { Compass, Target, Map, Sparkles } from "lucide-react";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { useState, useEffect } from "react";
 import { askAI } from "@/services/aiApi";
+import { generateCareerPlan, getCareerPlan } from "@/services/careerPlanApi";
+import { CareerPlan } from "@/types/careerPlan";
 import { toast } from "sonner";
 function SkeletonCard() {
     return (
@@ -26,13 +28,55 @@ export function CareerPathShell() {
     }, []);
     const [aiResponse, setAiResponse] = useState("");
     const [aiLoading, setAiLoading] = useState(false);
+    const [careerPlan, setCareerPlan] = useState<CareerPlan | null>(null);
+
+    const formatCareerPlan = (plan: CareerPlan) => {
+        return [
+            `Career Goal: ${plan.careerGoal}`,
+            "",
+            "Milestones:",
+            ...plan.milestones.map((milestone, index) => (
+                `${index + 1}. ${milestone.title} - ${milestone.description} (${milestone.dueDate})`
+            )),
+            "",
+            "Weekly Tasks:",
+            ...plan.weeklyTasks.map((task) => `- ${task}`),
+            "",
+            "Recommended Skills:",
+            ...plan.recommendedSkills.map((skill) => `- ${skill}`),
+            "",
+            "Recommended Courses:",
+            ...plan.recommendedCourses.map((course) => `- ${course}`),
+            "",
+            "Skill Gap Analysis:",
+            ...plan.skillGapAnalysis.map((gap) => `- ${gap}`),
+        ].join("\n");
+    };
+
+    useEffect(() => {
+        getCareerPlan()
+            .then((plan) => {
+                setCareerPlan(plan);
+                setAiResponse(formatCareerPlan(plan));
+            })
+            .catch(() => {
+                // No saved plan yet.
+            });
+    }, []);
+
     const generateCareerPath = async () => {
         setAiLoading(true);
         try {
-            const result = await askAI("Based on my profile, what is the most detailed and personalised career path you would recommend for me? Include specific steps, skills and timelines.");
-            setAiResponse(result.answer);
+            const result = await generateCareerPlan();
+            setCareerPlan(result.savedPlan);
+            setAiResponse(formatCareerPlan(result.savedPlan));
         } catch {
-            toast.error("AI is unavailable. Please try again later.");
+            try {
+                const fallback = await askAI("Based on my profile, what is the most detailed and personalised career path you would recommend for me? Include specific steps, skills and timelines.");
+                setAiResponse(fallback.answer);
+            } catch {
+                toast.error("AI is unavailable. Please try again later.");
+            }
         } finally {
             setAiLoading(false);
         }
@@ -131,11 +175,15 @@ export function CareerPathShell() {
                             <div key={i} className="relative pl-8">
                                 <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
                                 <h4 className="font-bold">{step.title}</h4>
-                                <p className="text-sm text-muted-foreground">{step.desc}</p>
-                                <span className="text-xs text-primary font-medium">{step.status}</span>
-                            </div>
-                        ))}
-                    </div>
+                            <p className="text-sm text-muted-foreground">
+                                {careerPlan?.milestones?.[i]?.description || step.desc}
+                            </p>
+                            <span className="text-xs text-primary font-medium">
+                                {careerPlan?.milestones?.[i]?.dueDate || step.status}
+                            </span>
+                        </div>
+                    ))}
+                </div>
                 </CardContent>
             </Card>
         </div>

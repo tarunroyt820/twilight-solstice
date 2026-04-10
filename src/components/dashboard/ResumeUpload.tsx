@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Upload, FileText, CheckCircle, X } from "lucide-react";
 import { toast } from "sonner";
-import axios from "axios";
+import axios from "@/services/http";
 
 const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/resume`;
 
@@ -12,9 +12,11 @@ const getAuthHeader = () => {
 
 export function ResumeUpload() {
   const [file, setFile] = useState<File | null>(null);
+  const [targetRole, setTargetRole] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [analysis, setAnalysis] = useState<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (selectedFile: File) => {
@@ -46,18 +48,23 @@ export function ResumeUpload() {
     try {
       const formData = new FormData();
       formData.append("resume", file);
+      if (targetRole.trim()) {
+        formData.append("targetRole", targetRole.trim());
+      }
 
-      await axios.post(`${API_URL}/upload`, formData, {
+      const response = await axios.post(`${API_URL}/upload`, formData, {
         headers: {
           ...getAuthHeader(),
           "Content-Type": "multipart/form-data",
         },
       });
 
+      setAnalysis(response.data?.analysis || null);
       setUploaded(true);
-      toast.success("Resume uploaded successfully!");
-    } catch {
-      toast.error("Upload failed. Please try again.");
+      toast.success("Resume uploaded and analyzed successfully!");
+    } catch (error: any) {
+      const message = error?.response?.data?.message || "Upload failed. Please try again.";
+      toast.error(message);
     } finally {
       setUploading(false);
     }
@@ -71,6 +78,14 @@ export function ResumeUpload() {
           Upload your CV so our AI can personalise your career path.
         </p>
       </div>
+
+      <input
+        type="text"
+        value={targetRole}
+        onChange={(event) => setTargetRole(event.target.value)}
+        placeholder="Optional: target role for job-specific ATS analysis (e.g., Senior Frontend Engineer)"
+        className="h-12 w-full rounded-2xl border border-border/40 bg-background px-5 text-sm font-semibold text-foreground transition-colors focus:border-primary/50 focus:outline-none"
+      />
 
       <div
         onDragOver={(event) => {
@@ -146,12 +161,37 @@ export function ResumeUpload() {
               onClick={() => {
                 setFile(null);
                 setUploaded(false);
+                setAnalysis(null);
               }}
               className="rounded-xl p-2 text-muted-foreground hover:bg-muted/50"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
+        </div>
+      )}
+
+      {analysis && (
+        <div className="rounded-2xl border border-border/40 bg-card/60 p-5 space-y-4">
+          <h3 className="text-lg font-black">ATS Analysis Report</h3>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl bg-muted/30 p-3 text-sm font-semibold">ATS: {analysis?.scores?.atsCompatibility ?? "N/A"}</div>
+            <div className="rounded-xl bg-muted/30 p-3 text-sm font-semibold">Content: {analysis?.scores?.contentStrength ?? "N/A"}</div>
+            <div className="rounded-xl bg-muted/30 p-3 text-sm font-semibold">Overall: {analysis?.scores?.overallScore ?? "N/A"}</div>
+          </div>
+          {analysis?.summary && (
+            <p className="text-sm text-muted-foreground leading-relaxed">{analysis.summary}</p>
+          )}
+          {Array.isArray(analysis?.actionPlan) && analysis.actionPlan.length > 0 && (
+            <div>
+              <p className="text-sm font-black uppercase tracking-wider">Priority Action Plan</p>
+              <ul className="mt-2 list-disc pl-5 space-y-1 text-sm text-foreground">
+                {analysis.actionPlan.slice(0, 8).map((item: string, index: number) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

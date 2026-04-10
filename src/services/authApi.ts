@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "./http";
 
 const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth`;
 
@@ -39,9 +39,19 @@ export const login = async (email: string, password: string): Promise<AuthRespon
     }
 };
 
-export const signup = async (fullName: string, email: string, password: string): Promise<AuthResponse> => {
+export const signup = async (
+    fullName: string,
+    email: string,
+    password: string,
+    joinSkillExchange = false
+): Promise<AuthResponse> => {
     try {
-        const response = await axios.post<AuthResponse>(`${API_URL}/signup`, { fullName, email, password });
+        const response = await axios.post<AuthResponse>(`${API_URL}/signup`, {
+            fullName,
+            email,
+            password,
+            joinSkillExchange
+        });
         return response.data;
     } catch (error: any) {
         throw error;
@@ -73,6 +83,7 @@ export const resetPassword = async (token: string, password: string): Promise<{ 
 
 export const logout = () => {
     localStorage.removeItem("nextro_token");
+    localStorage.removeItem("nextro_refresh_token");
 };
 
 export const getToken = () => {

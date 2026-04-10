@@ -1,7 +1,8 @@
 
 const mongoose = require('mongoose');
-const User = require('./models/User');
-require('dotenv').config({ path: 'backend/.env' });
+const path = require('path');
+const User = require('../models/User');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const listUsers = async () => {
     try {
