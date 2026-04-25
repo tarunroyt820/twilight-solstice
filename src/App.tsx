@@ -25,6 +25,9 @@ import { SkillPublicProfilePage } from "./components/skill-exchange/SkillPublicP
 import { SkillRequestsPage } from "./components/skill-exchange/SkillRequestsPage";
 import { SkillExchangesPage } from "./components/skill-exchange/SkillExchangesPage";
 import { SkillNotificationsPage } from "./components/skill-exchange/SkillNotificationsPage";
+import { SkillMessagesPage } from "./components/skill-exchange/SkillMessagesPage";
+import FindPeople from "./pages/FindPeople";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     if (hasValidToken()) return <Navigate to="/dashboard/overview" replace />;
@@ -73,8 +76,11 @@ export default function App() {
                     <Route path="/profile/skills" element={<SkillProfileSetupPage />} />
                     <Route path="/profile/availability" element={<SkillAvailabilityPage />} />
                     <Route path="/matches" element={<SkillMatchesPage />} />
+                    <Route path="/discover" element={<FindPeople />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/requests" element={<SkillRequestsPage />} />
                     <Route path="/exchanges" element={<SkillExchangesPage />} />
+                    <Route path="/messages" element={<SkillMessagesPage />} />
                     <Route path="/notifications" element={<SkillNotificationsPage />} />
                 </Route>
 
