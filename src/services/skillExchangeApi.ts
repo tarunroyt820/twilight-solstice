@@ -73,6 +73,16 @@ export interface Session {
   agreementId: string;
   scheduledAt: string;
   completedAt?: string | null;
+  participantConfirmations?: Array<{
+    userId: string | { _id: string; fullName?: string };
+    confirmedAt?: string;
+  }>;
+  noShowReported?: {
+    by?: string | { _id: string; fullName?: string };
+    at?: string;
+    reason?: string;
+    proof?: string;
+  } | null;
   status: "scheduled" | "completed" | "disputed" | "noshow";
 }
 
@@ -163,6 +173,23 @@ export const getMatches = async (skill: string, page = 1, limit = 12): Promise<{
     const response = await axios.get<{ matches: MatchCard[]; total: number; page: number }>(
       `${BASE_URL}/matches?${params.toString()}`,
       { headers: getAuthHeader() },
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(parseApiError(error));
+  }
+};
+
+export const searchProfiles = async (q: string, type: 'all' | 'skill' | 'name' = 'all', page = 1, limit = 20): Promise<{ profiles: SkillProfile[]; total: number; page: number }> => {
+  try {
+    const params = new URLSearchParams();
+    params.set('q', q);
+    params.set('type', type);
+    params.set('page', String(page));
+    params.set('limit', String(limit));
+    const response = await axios.get<{ profiles: SkillProfile[]; total: number; page: number }>(
+      `${BASE_URL}/skills/search?${params.toString()}`,
+      { headers: getAuthHeader() }
     );
     return response.data;
   } catch (error) {

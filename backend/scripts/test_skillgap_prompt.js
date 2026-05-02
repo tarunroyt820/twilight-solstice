@@ -12,8 +12,8 @@ const prompt = [
 (async () => {
     try {
         const result = await ai.generate(prompt, {
-            provider: "deepseek",
-            model: process.env.DEEPSEEK_HEAVY_MODEL || process.env.DEEPSEEK_MODEL,
+            provider: "groq",
+            model: process.env.GROQ_SKILLGAP_MODEL || process.env.GROQ_HEAVY_MODEL || process.env.GROQ_MODEL,
         });
 
         console.log("providerUsed:", result.providerUsed);

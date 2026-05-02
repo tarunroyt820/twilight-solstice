@@ -1,191 +1,346 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/common/Button";
-import { Compass, Target, Map, Sparkles } from "lucide-react";
+import { Compass, Target, Map, Sparkles, Plus, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { ProgressBar } from "@/components/common/ProgressBar";
-import { useState, useEffect } from "react";
-import { askAI } from "@/services/aiApi";
-import { generateCareerPlan, getCareerPlan } from "@/services/careerPlanApi";
+import { useState } from "react";
 import { CareerPlan } from "@/types/careerPlan";
 import { toast } from "sonner";
+import {
+  useGetPlans,
+  useCreatePlan,
+  useGetPlan,
+} from "@/hooks/useCareerPlans";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { InputField } from "@/components/common/InputField";
+import { PlanTimeline, RecommendationPanel } from "@/components/career";
+
+/**
+ * Loading skeleton card
+ */
 function SkeletonCard() {
-    return (
-        <div className="rounded-3xl border border-border/30 bg-card/40 p-6 space-y-4 animate-pulse">
-            <div className="h-10 w-10 rounded-xl bg-muted/50" />
-            <div className="h-5 w-3/4 rounded-lg bg-muted/50" />
-            <div className="h-4 w-1/2 rounded-lg bg-muted/40" />
-            <div className="h-3 w-full rounded-full bg-muted/30 mt-4" />
-            <div className="h-10 w-full rounded-xl bg-muted/30 mt-4" />
-        </div>
-    );
+  return (
+    <div className="rounded-3xl border border-border/30 bg-card/40 p-6 space-y-4 animate-pulse">
+      <div className="h-10 w-10 rounded-xl bg-muted/50" />
+      <div className="h-5 w-3/4 rounded-lg bg-muted/50" />
+      <div className="h-4 w-1/2 rounded-lg bg-muted/40" />
+      <div className="h-3 w-full rounded-full bg-muted/30 mt-4" />
+      <div className="h-10 w-full rounded-xl bg-muted/30 mt-4" />
+    </div>
+  );
 }
 
-export function CareerPathShell() {
-    const [loading, setLoading] = useState(true);
-    useEffect(() => {
-        const t = setTimeout(() => setLoading(false), 800);
-        return () => clearTimeout(t);
-    }, []);
-    const [aiResponse, setAiResponse] = useState("");
-    const [aiLoading, setAiLoading] = useState(false);
-    const [careerPlan, setCareerPlan] = useState<CareerPlan | null>(null);
+/**
+ * Create Plan Modal
+ */
+function CreatePlanModal() {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [targetRole, setTargetRole] = useState("");
+  const [timeframe, setTimeframe] = useState("");
+  const [intensity, setIntensity] = useState("medium");
 
-    const formatCareerPlan = (plan: CareerPlan) => {
-        return [
-            `Career Goal: ${plan.careerGoal}`,
-            "",
-            "Milestones:",
-            ...plan.milestones.map((milestone, index) => (
-                `${index + 1}. ${milestone.title} - ${milestone.description} (${milestone.dueDate})`
-            )),
-            "",
-            "Weekly Tasks:",
-            ...plan.weeklyTasks.map((task) => `- ${task}`),
-            "",
-            "Recommended Skills:",
-            ...plan.recommendedSkills.map((skill) => `- ${skill}`),
-            "",
-            "Recommended Courses:",
-            ...plan.recommendedCourses.map((course) => `- ${course}`),
-            "",
-            "Skill Gap Analysis:",
-            ...plan.skillGapAnalysis.map((gap) => `- ${gap}`),
-        ].join("\n");
-    };
+  const createMutation = useCreatePlan();
 
-    useEffect(() => {
-        getCareerPlan()
-            .then((plan) => {
-                setCareerPlan(plan);
-                setAiResponse(formatCareerPlan(plan));
-            })
-            .catch(() => {
-                // No saved plan yet.
-            });
-    }, []);
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    const generateCareerPath = async () => {
-        setAiLoading(true);
-        try {
-            const result = await generateCareerPlan();
-            setCareerPlan(result.savedPlan);
-            setAiResponse(formatCareerPlan(result.savedPlan));
-        } catch {
-            try {
-                const fallback = await askAI("Based on my profile, what is the most detailed and personalised career path you would recommend for me? Include specific steps, skills and timelines.");
-                setAiResponse(fallback.answer);
-            } catch {
-                toast.error("AI is unavailable. Please try again later.");
-            }
-        } finally {
-            setAiLoading(false);
-        }
-    };
-    const paths = [
-        { name: "Frontend Developer", match: 95, status: "Current", active: true },
-        { name: "Full-Stack Engineer", match: 80, status: "Recommended", active: false },
-        { name: "UI/UX Designer", match: 65, status: "Alternative", active: false },
-    ];
-    if (loading) {
-        return (
-            <div className="space-y-6">
-                <div className="h-8 w-64 rounded-lg bg-muted/40 animate-pulse" />
-                <div className="h-4 w-96 rounded-lg bg-muted/30 animate-pulse" />
-                <div className="grid gap-6 md:grid-cols-3 mt-6">
-                    <SkeletonCard />
-                    <SkeletonCard />
-                    <SkeletonCard />
-                </div>
-            </div>
-        );
+    if (!title.trim() || !targetRole.trim()) {
+      toast.error("Title and target role are required");
+      return;
     }
+
+    try {
+      await createMutation.mutateAsync({
+        title,
+        targetRole,
+        timeframe,
+        intensity,
+      });
+
+      toast.success("Career plan created! AI is generating recommendations...");
+      setTitle("");
+      setTargetRole("");
+      setTimeframe("");
+      setIntensity("medium");
+      setOpen(false);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create plan"
+      );
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90">
+          <Plus className="h-4 w-4" />
+          New Career Plan
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Create a Career Plan</DialogTitle>
+          <DialogDescription>
+            Define your career goals and let AI generate a personalized roadmap.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleCreate} className="space-y-4">
+          <InputField
+            label="Plan Title"
+            placeholder="e.g., Become a Senior React Developer"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <InputField
+            label="Target Role"
+            placeholder="e.g., Senior Frontend Engineer"
+            value={targetRole}
+            onChange={(e) => setTargetRole(e.target.value)}
+          />
+          <InputField
+            label="Timeframe (optional)"
+            placeholder="e.g., 6 months, 1 year"
+            value={timeframe}
+            onChange={(e) => setTimeframe(e.target.value)}
+          />
+          <div>
+            <label className="text-sm font-medium">Intensity</label>
+            <select
+              value={intensity}
+              onChange={(e) => setIntensity(e.target.value)}
+              className="w-full mt-1 rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="low">Low (5-10 hrs/week)</option>
+              <option value="medium">Medium (10-20 hrs/week)</option>
+              <option value="high">High (20+ hrs/week)</option>
+            </select>
+          </div>
+          <Button
+            type="submit"
+            disabled={createMutation.isPending}
+            className="w-full"
+          >
+            {createMutation.isPending ? "Creating..." : "Create Plan"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Plan Card - displays a single career plan
+ */
+function PlanCard({ plan, onClick }: { plan: CareerPlan; onClick: () => void }) {
+  const statusColors: Record<string, string> = {
+    ACTIVE: "bg-green-500/10 text-green-700 dark:text-green-300",
+    PAUSED: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
+    COMPLETED: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
+  };
+
+  const statusIcons: Record<string, React.ReactNode> = {
+    ACTIVE: <Sparkles className="h-4 w-4" />,
+    PAUSED: <Clock className="h-4 w-4" />,
+    COMPLETED: <CheckCircle2 className="h-4 w-4" />,
+  };
+
+  const milestonesCompleted = plan.milestones.filter((m) => m.completed).length;
+  const totalMilestones = plan.milestones.length;
+
+  return (
+    <Card className="rounded-3xl border-border/50 hover:border-primary/30 cursor-pointer transition-all">
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div className="bg-primary/10 p-2 rounded-xl">
+            <Target className="h-5 w-5 text-primary" />
+          </div>
+          <span
+            className={`text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 ${
+              statusColors[plan.status] || statusColors.ACTIVE
+            }`}
+          >
+            {statusIcons[plan.status]} {plan.status}
+          </span>
+        </div>
+        <CardTitle className="mt-4">{plan.title}</CardTitle>
+        <CardDescription>{plan.targetRole}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span>Progress</span>
+              <span className="font-semibold">{plan.overallProgress}%</span>
+            </div>
+            <ProgressBar value={plan.overallProgress} />
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {milestonesCompleted} of {totalMilestones} milestones completed
+          </div>
+          <Button
+            variant="outline"
+            className="w-full rounded-xl"
+            onClick={onClick}
+          >
+            View Details
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Main CareerPathShell Component
+ */
+export function CareerPathShell() {
+  const [selectedPlanId, setSelectedPlanId] = useState<string | undefined>();
+  const plansQuery = useGetPlans();
+  const selectedPlanQuery = useGetPlan(selectedPlanId);
+
+  // Show loading skeleton while fetching plans
+  if (plansQuery.isLoading) {
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Career Path Finder</h2>
-                    <p className="text-muted-foreground">AI-powered career recommendations based on your skills.</p>
-                </div>
-                <div className="flex gap-3">
-                    <Button className="gap-2">
-                        <Compass className="h-4 w-4" />
-                        Retake Assessment
-                    </Button>
-                    <Button
-                        onClick={generateCareerPath}
-                        disabled={aiLoading}
-                        className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
-                    >
-                        <Sparkles className="h-4 w-4" />
-                        {aiLoading ? "Generating..." : "AI Generate My Path"}
-                    </Button>
-                </div>
+      <div className="space-y-6">
+        <div className="h-8 w-64 rounded-lg bg-muted/40 animate-pulse" />
+        <div className="h-4 w-96 rounded-lg bg-muted/30 animate-pulse" />
+        <div className="grid gap-6 md:grid-cols-3 mt-6">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      </div>
+    );
+  }
+
+  const plans = plansQuery.data || [];
+  const hasPlans = plans.length > 0;
+  const selectedPlan = selectedPlanQuery.data;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Career Path Finder</h2>
+          <p className="text-muted-foreground">
+            AI-powered career roadmaps tailored to your goals.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          {hasPlans && (
+            <Button variant="outline" className="gap-2">
+              <Compass className="h-4 w-4" />
+              Assessment
+            </Button>
+          )}
+          <CreatePlanModal />
+        </div>
+      </div>
+
+      {/* Empty State */}
+      {!hasPlans ? (
+        <Card className="rounded-3xl border-border/50 p-12 text-center">
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <div className="bg-primary/10 p-4 rounded-2xl">
+                <Map className="h-8 w-8 text-primary" />
+              </div>
             </div>
-            <div className="grid gap-6 md:grid-cols-3">
-                {paths.map((path) => (
-                    <Card key={path.name} className={`rounded-3xl border-border/50 ${path.active ? 'ring-2 ring-primary' : ''}`}>
-                        <CardHeader>
-                            <div className="flex justify-between items-start">
-                                <div className="bg-primary/10 p-2 rounded-xl">
-                                    <Target className="h-5 w-5 text-primary" />
-                                </div>
-                                <span className="text-xs font-semibold px-2 py-1 bg-muted rounded-full">
-                                    {path.status}
-                                </span>
-                            </div>
-                            <CardTitle className="mt-4">{path.name}</CardTitle>
-                            <CardDescription>{path.match}% Match with your profile</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ProgressBar label="Skills Match" value={path.match} showValue />
-                            <Button variant="outline" className="w-full mt-4 rounded-xl">View Details</Button>
-                        </CardContent>
-                    </Card>
-                ))}
+            <div>
+              <h3 className="text-lg font-semibold">No Career Plans Yet</h3>
+              <p className="text-muted-foreground mt-1">
+                Create your first career plan to get AI-powered recommendations
+                and a personalized roadmap.
+              </p>
             </div>
-            {aiResponse && (
-                <Card className="rounded-3xl border-primary/20 bg-card/60 backdrop-blur-sm">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-primary">
-                            <Sparkles className="h-5 w-5" />
-                            Your Personalised AI Career Path
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="prose-custom text-foreground whitespace-pre-wrap text-sm leading-relaxed">
-                            {aiResponse}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-            <Card className="rounded-3xl border-border/50">
+            <CreatePlanModal />
+          </div>
+        </Card>
+      ) : (
+        <>
+          {/* Plans Grid */}
+          <div className="grid gap-6 md:grid-cols-3">
+            {plans.map((plan) => (
+              <PlanCard
+                key={plan._id}
+                plan={plan}
+                onClick={() => setSelectedPlanId(plan._id)}
+              />
+            ))}
+          </div>
+
+          {/* Selected Plan Details */}
+          {selectedPlan && (
+            <>
+              {/* Plan Overview */}
+              <Card className="rounded-3xl border-primary/20 bg-card/60 backdrop-blur-sm">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Map className="h-5 w-5 text-primary" />
-                        Active Career Roadmap
-                    </CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-primary">
+                    <Sparkles className="h-5 w-5" />
+                    {selectedPlan.title}
+                  </CardTitle>
+                  <CardDescription>{selectedPlan.targetRole}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="relative border-l-2 border-primary/20 ml-4 pb-4 space-y-8">
-                        {[ 
-                            { title: "Foundation", status: "Completed", desc: "HTML, CSS, Basic JavaScript" },
-                            { title: "Frameworks", status: "In Progress", desc: "React, Tailwind, State Management" },
-                            { title: "Advanced Topics", status: "Upcoming", desc: "Testing, Performance, CI/CD" },
-                        ].map((step, i) => (
-                            <div key={i} className="relative pl-8">
-                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
-                                <h4 className="font-bold">{step.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                                {careerPlan?.milestones?.[i]?.description || step.desc}
-                            </p>
-                            <span className="text-xs text-primary font-medium">
-                                {careerPlan?.milestones?.[i]?.dueDate || step.status}
-                            </span>
-                        </div>
-                    ))}
-                </div>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span>Overall Progress</span>
+                        <span className="font-semibold">
+                          {selectedPlan.overallProgress}%
+                        </span>
+                      </div>
+                      <ProgressBar value={selectedPlan.overallProgress} />
+                    </div>
+                    {selectedPlan.notes && (
+                      <p className="text-sm text-muted-foreground">
+                        {selectedPlan.notes}
+                      </p>
+                    )}
+                    {!selectedPlan.aiReady && (
+                      <div className="flex items-start gap-2 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                        <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-300 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                          AI is generating your milestones. This may take a few moments...
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
-            </Card>
-        </div>
-    );
+              </Card>
+
+              {/* Milestones Roadmap with Timeline */}
+              <div className="rounded-3xl border border-border/50 bg-card/40 p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <Map className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">
+                    Your Career Roadmap
+                  </h3>
+                </div>
+                <PlanTimeline
+                  planId={selectedPlan._id || ""}
+                  milestones={selectedPlan.milestones}
+                />
+              </div>
+
+              {/* AI Recommendations */}
+              {selectedPlan.aiReady && (
+                <RecommendationPanel plan={selectedPlan} />
+              )}
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
 }

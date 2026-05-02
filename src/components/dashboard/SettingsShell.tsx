@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/common/Button";
+import PushNotificationSettings from "@/components/settings/PushNotificationSettings";
 import { EnhancedProfile } from "@/types/enhancedProfile";
 import {
   getEnhancedProfile,
@@ -757,6 +758,10 @@ export function SettingsShell() {
                     <strong>Pro feature:</strong> Weekly digest emails and recruiter
                     view alerts are available on the Pro plan.
                   </p>
+                </div>
+
+                <div className="mt-5">
+                  <PushNotificationSettings />
                 </div>
               </div>
             </div>

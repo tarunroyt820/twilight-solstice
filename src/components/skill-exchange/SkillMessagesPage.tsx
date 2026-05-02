@@ -89,7 +89,7 @@ export function SkillMessagesPage() {
       if (selectedAgreementId) {
         loadThread(selectedAgreementId);
       }
-    }, 15000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [loadInbox, loadThread, selectedAgreementId]);

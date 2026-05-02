@@ -31,6 +31,7 @@ import {
   panelClass,
   sectionClass,
 } from "@/components/skill-exchange/shared";
+import SearchProfiles from "@/components/skill-exchange/SearchProfiles";
 
 type OverviewState = {
   profile: SkillProfile | null;
@@ -248,7 +249,21 @@ export function SkillExchangeShell() {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.9fr]">
+      <div className="grid gap-6">
+        <div className={`${panelClass} p-6`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-black text-white">Find people to trade with</h3>
+              <p className="mt-1 text-sm text-[rgba(189,216,233,0.72)]">Search by name or skill to start a proposal quickly.</p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <SearchProfiles />
+          </div>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.9fr]">
         <div className={`${panelClass} p-6`}>
           <div className="flex items-center justify-between">
             <div>
@@ -348,6 +363,7 @@ export function SkillExchangeShell() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

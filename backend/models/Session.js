@@ -62,6 +62,14 @@ const SessionSchema = new mongoose.Schema(
             type: NoShowSchema,
             default: null
         },
+        reminder24Sent: {
+            type: Boolean,
+            default: false
+        },
+        reminder1Sent: {
+            type: Boolean,
+            default: false
+        },
         status: {
             type: String,
             enum: ['scheduled', 'completed', 'disputed', 'noshow'],
@@ -74,5 +82,7 @@ const SessionSchema = new mongoose.Schema(
 SessionSchema.index({ agreementId: 1 });
 SessionSchema.index({ scheduledAt: 1 });
 SessionSchema.index({ status: 1 });
+SessionSchema.index({ status: 1, reminder24Sent: 1, scheduledAt: 1 });
+SessionSchema.index({ status: 1, reminder1Sent: 1, scheduledAt: 1 });
 
 module.exports = mongoose.model('Session', SessionSchema);

@@ -22,7 +22,7 @@ const getAuthHeader = () => {
 
 export const askAI = async (
     question: string,
-    options?: { provider?: "groq" | "deepseek" }
+    options?: { provider?: "groq" | "huggingface" | "hf" }
 ): Promise<AIResponse> => {
     try {
         const response = await axios.post<AIResponse>(
@@ -43,7 +43,7 @@ export const askAI = async (
 export const streamAI = async (
     question: string,
     onChunk: (text: string) => void,
-    options?: { provider?: "groq" | "deepseek" }
+    options?: { provider?: "groq" | "huggingface" | "hf" }
 ): Promise<void> => {
     const token = localStorage.getItem("nextro_token");
     const headers: Record<string, string> = {

@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nextaro - Static Frontend Demo</title>
+    <meta
+      name="description"
+      content="A polished static frontend demo for Nextaro's skill exchange platform, built for design review before backend integration."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <div class="bg-grid"></div>
+
+    <header class="topbar glass">
+      <div class="brand">
+        <div class="brand-mark">N</div>
+        <div>
+          <div class="brand-name">Nextaro</div>
+          <div class="brand-tag">Static frontend demo</div>
+        </div>
+      </div>
+
+      <nav class="nav-links" aria-label="Primary">
+        <button class="nav-link active" data-view="home">Home</button>
+        <button class="nav-link" data-view="auth">Auth</button>
+        <button class="nav-link" data-view="dashboard">Dashboard</button>
+        <button class="nav-link" data-view="discover">Discover</button>
+        <button class="nav-link" data-view="profile">Profile</button>
+        <button class="nav-link" data-view="exchanges">Exchanges</button>
+        <button class="nav-link" data-view="ai">AI</button>
+      </nav>
+
+      <div class="topbar-actions">
+        <button class="ghost-btn" data-view="auth">Log in</button>
+        <button class="primary-btn" data-view="auth">Start free</button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="hero card-glow view active" data-view-panel="home">
+        <div class="hero-copy">
+          <span class="eyebrow">Skill exchange platform UI</span>
+          <h1>Build trust, showcase expertise, and turn skills into exchanges.</h1>
+          <p>
+            This is a full static frontend concept for Nextaro. It includes the landing page,
+            authentication screens, discovery flows, profiles, exchange management, and AI
+            recommendations with no backend wiring.
+          </p>
+
+          <div class="hero-actions">
+            <button class="primary-btn" data-view="dashboard">View dashboard</button>
+            <button class="secondary-btn" data-view="discover">Explore skills</button>
+          </div>
+
+          <div class="hero-stats">
+            <div>
+              <strong>1,284</strong>
+              <span>active members</span>
+            </div>
+            <div>
+              <strong>97%</strong>
+              <span>successful matches</span>
+            </div>
+            <div>
+              <strong>4.9/5</strong>
+              <span>average rating</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-preview">
+          <div class="preview-panel">
+            <div class="preview-header">
+              <span>Featured exchange</span>
+              <span class="status-pill live">Live</span>
+            </div>
+            <div class="preview-card">
+              <div class="avatar large">SJ</div>
+              <div>
+                <h3>Sofia Jones</h3>
+                <p>Teaches UI design, learns full-stack systems, available evenings.</p>
+              </div>
+            </div>
+            <div class="mini-metrics">
+              <div>
+                <span>Skill</span>
+                <strong>Design systems</strong>
+              </div>
+              <div>
+                <span>Format</span>
+                <strong>Video + async</strong>
+              </div>
+              <div>
+                <span>Match</span>
+                <strong>94%</strong>
+              </div>
+            </div>
+          </div>
+          <div class="floating-note glass">
+            <strong>Review-ready frontend</strong>
+            <span>No backend. Pure design prototype for approval and iteration.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="view auth-grid" data-view-panel="auth">
+        <div class="auth-card card-glow" id="login">
+          <div class="section-kicker">Login page</div>
+          <h2>Welcome back</h2>
+          <p>Sign in to continue your learning path and exchange dashboard.</p>
+          <form class="form-stack">
+            <label>
+              Email
+              <input type="email" placeholder="you@nextaro.com" />
+            </label>
+            <label>
+              Password
+              <input type="password" placeholder="••••••••" />
+            </label>
+            <div class="form-row">
+              <label class="checkbox">
+                <input type="checkbox" checked />
+                <span>Remember me</span>
+              </label>
+              <a href="#">Forgot password?</a>
+            </div>
+            <button class="primary-btn full-width" type="button">Sign in</button>
+          </form>
+        </div>
+
+        <div class="auth-card alt card-glow" id="signup">
+          <div class="section-kicker">Sign up page</div>
+          <h2>Create your profile</h2>
+          <p>Set up your expertise, the skills you want to learn, and your exchange style.</p>
+          <form class="form-stack">
+            <label>
+              Full name
+              <input type="text" placeholder="Alex Morgan" />
+            </label>
+            <label>
+              Email
+              <input type="email" placeholder="alex@nextaro.com" />
+            </label>
+            <label>
+              Primary skill
+              <input type="text" placeholder="UI Design" />
+            </label>
+            <button class="primary-btn full-width" type="button">Create account</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="view dashboard-layout" data-view-panel="dashboard">
+        <div class="panel card-glow">
+          <div class="panel-head">
+            <div>
+              <div class="section-kicker">Dashboard</div>
+              <h2>Hello, Priya</h2>
+            </div>
+            <span class="status-pill">3 new matches</span>
+          </div>
+          <div class="stat-grid">
+            <article>
+              <span>Matches</span>
+              <strong>26</strong>
+            </article>
+            <article>
+              <span>Active exchanges</span>
+              <strong>8</strong>
+            </article>
+            <article>
+              <span>Profile views</span>
+              <strong>214</strong>
+            </article>
+          </div>
+          <div class="activity-list">
+            <div>
+              <strong>Design systems with Amira</strong>
+              <span>Next session in 2 hours</span>
+            </div>
+            <div>
+              <strong>JavaScript mentoring accepted</strong>
+              <span>Exchange agreement ready</span>
+            </div>
+            <div>
+              <strong>AI suggested 5 new matches</strong>
+              <span>Based on your learning goals</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel card-glow">
+          <div class="section-kicker">Workspace</div>
+          <h3>Quick actions</h3>
+          <div class="quick-actions">
+            <button class="soft-btn" data-view="discover">Find experts</button>
+            <button class="soft-btn" data-view="profile">Edit profile</button>
+            <button class="soft-btn" data-view="ai">Get recommendations</button>
+            <button class="soft-btn" data-view="exchanges">Open exchanges</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view discover-layout" data-view-panel="discover">
+        <div class="panel card-glow discover-toolbar">
+          <div>
+            <div class="section-kicker">Discover</div>
+            <h2>Browse skill experts</h2>
+          </div>
+          <div class="search-box">
+            <input type="text" placeholder="Search React, Figma, Spanish, product..." />
+          </div>
+        </div>
+
+        <div class="discover-grid">
+          <aside class="panel card-glow filters">
+            <h3>Filters</h3>
+            <label><input type="checkbox" checked /> Design</label>
+            <label><input type="checkbox" checked /> Engineering</label>
+            <label><input type="checkbox" /> Marketing</label>
+            <label><input type="checkbox" /> Languages</label>
+            <label><input type="checkbox" checked /> Available this week</label>
+          </aside>
+
+          <div class="skills-grid">
+            <article class="skill-card card-glow">
+              <div class="skill-top">
+                <div class="avatar">AR</div>
+                <div>
+                  <h3>Adobe Illustrator</h3>
+                  <p>by Aanya Rao</p>
+                </div>
+                <span class="status-pill">Expert</span>
+              </div>
+              <p>Brand systems, logos, and polished visual storytelling for startups.</p>
+              <div class="meta-row"><span>4.9 rating</span><span>Tue/Fri evenings</span></div>
+            </article>
+
+            <article class="skill-card card-glow">
+              <div class="skill-top">
+                <div class="avatar">MK</div>
+                <div>
+                  <h3>React Development</h3>
+                  <p>by Mateo Kim</p>
+                </div>
+                <span class="status-pill">Intermediate</span>
+              </div>
+              <p>Component architecture, state management, and modern frontend workflows.</p>
+              <div class="meta-row"><span>4.8 rating</span><span>Weekends</span></div>
+            </article>
+
+            <article class="skill-card card-glow">
+              <div class="skill-top">
+                <div class="avatar">ES</div>
+                <div>
+                  <h3>Spanish Conversation</h3>
+                  <p>by Elena Suarez</p>
+                </div>
+                <span class="status-pill">Beginner</span>
+              </div>
+              <p>Practical conversation practice with feedback on fluency and pronunciation.</p>
+              <div class="meta-row"><span>4.7 rating</span><span>Daily mornings</span></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="view profile-layout" data-view-panel="profile">
+        <div class="panel card-glow profile-header">
+          <div class="avatar xl">PA</div>
+          <div>
+            <div class="section-kicker">Profile</div>
+            <h2>Priya Anand</h2>
+            <p>Product designer helping teams create elegant, usable, and high-conviction interfaces.</p>
+          </div>
+          <button class="primary-btn">Edit profile</button>
+        </div>
+
+        <div class="profile-grid">
+          <article class="panel card-glow">
+            <h3>Skills offered</h3>
+            <div class="chip-row">
+              <span class="chip">UI design</span>
+              <span class="chip">Figma</span>
+              <span class="chip">Design systems</span>
+              <span class="chip">Research</span>
+            </div>
+          </article>
+
+          <article class="panel card-glow">
+            <h3>Skills wanted</h3>
+            <div class="chip-row">
+              <span class="chip alt">TypeScript</span>
+              <span class="chip alt">Motion design</span>
+              <span class="chip alt">Public speaking</span>
+            </div>
+          </article>
+
+          <article class="panel card-glow wide">
+            <h3>Reviews</h3>
+            <div class="review">
+              <strong>★★★★★</strong>
+              <p>“Structured, thoughtful, and incredibly clear feedback.”</p>
+            </div>
+            <div class="review">
+              <strong>★★★★★</strong>
+              <p>“A great exchange partner who actually prepares useful materials.”</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view exchanges-layout" data-view-panel="exchanges">
+        <div class="panel card-glow">
+          <div class="section-kicker">Exchanges</div>
+          <h2>Active conversations and scheduled sessions</h2>
+          <div class="exchange-stack">
+            <article class="exchange-card">
+              <div>
+                <h3>Amira / Design systems</h3>
+                <p>Progress: 72% complete · Next session Thursday 6:30 PM</p>
+              </div>
+              <span class="status-pill live">Active</span>
+            </article>
+            <article class="exchange-card">
+              <div>
+                <h3>Jules / Product strategy</h3>
+                <p>Agreement ready · Waiting for schedule confirmation</p>
+              </div>
+              <span class="status-pill">Pending</span>
+            </article>
+            <article class="exchange-card">
+              <div>
+                <h3>Maria / Spanish practice</h3>
+                <p>Completed with a 5-star review from both sides</p>
+              </div>
+              <span class="status-pill">Completed</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="view ai-layout" data-view-panel="ai">
+        <div class="panel card-glow ai-chat">
+          <div class="section-kicker">AI assistant</div>
+          <h2>Get intelligent match suggestions</h2>
+          <div class="chat-bubble user">I want better matches for design and frontend skill swaps.</div>
+          <div class="chat-bubble ai">Suggested focus: React, motion systems, and design tokens with high-compatibility matches.</div>
+          <div class="chat-bubble ai">Nextaro can rank partners by availability, overlap, and exchange value once backend is connected.</div>
+        </div>
+
+        <div class="panel card-glow">
+          <h3>Recommended learning path</h3>
+          <div class="path-list">
+            <span>1. Design tokens</span>
+            <span>2. Component systems</span>
+            <span>3. Frontend implementation</span>
+            <span>4. Motion and polish</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Static frontend prototype for Nextaro. No backend integration is active yet.</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

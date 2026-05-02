@@ -64,7 +64,7 @@ Definition: frontend interceptor can recover from expired access token automatic
 ### Critical
 1. Boot hard-depends on GROQ key even when not using Groq.
 Location: `backend/app.js`
-Impact: server exits if `GROQ_API_KEY` missing, even if selected provider is NVIDIA/DeepSeek or non-AI routes only.
+Impact: server exits if `GROQ_API_KEY` missing, even if non-AI routes only.
 
 2. Public AI test endpoint is enabled.
 Location: `backend/routes/aiRoutes.js`

@@ -51,7 +51,7 @@ const buildLocalFallbackAnswer = (question, profile, plan) => {
     const missingSkills = plan?.recommendedSkills?.slice(0, 3) || [];
 
     return [
-        `Hi ${name}, DeepSeek is temporarily unavailable, so I am giving you a quick fallback answer based on your profile.`,
+        `Hi ${name}, the primary AI provider is temporarily unavailable, so I am giving you a quick fallback answer based on your profile.`,
         "",
         `Question: ${question}`,
         "",
@@ -61,7 +61,7 @@ const buildLocalFallbackAnswer = (question, profile, plan) => {
         `- Next skills to develop: ${missingSkills.length ? missingSkills.join(", ") : "communication, project depth, and portfolio proof"}`,
         `- Immediate next step: choose one project or learning task today that moves you closer to ${goal}`,
         "",
-        `If you want, ask again in a minute and I will retry the full DeepSeek-powered response.`
+        `If you want, ask again in a minute and I will retry the full AI-powered response.`
     ].join("\n");
 };
 
@@ -77,7 +77,7 @@ const buildTrimmedHistory = (fullHistory) => {
         .slice(-MAX_HISTORY_TURNS)
         .map((message) => {
             const raw = String(message.content || '');
-            const isFallback = raw.includes('DeepSeek is temporarily unavailable');
+            const isFallback = raw.includes('primary AI provider is temporarily unavailable');
             const normalized = isFallback
                 ? '[Previous fallback response omitted to keep prompt compact.]'
                 : raw;
@@ -189,13 +189,18 @@ exports.askAI = async (req, res) => {
         ].filter(Boolean).join('\n\n');
 
         try {
-            const { provider: routedProvider, model: routedModel, intent } = getProvider(question);
-            const provider = preferredProvider || routedProvider;
+            const { provider, model: routedModel, intent } = getProvider(question, preferredProvider);
             console.log(`[ROUTER] intent: ${intent} -> provider: ${provider} -> model: ${routedModel}`);
             const endAiCall = timer('ai_provider_call');
             let result;
             try {
-                result = await aiService.generate(prompt, { provider, model: routedModel });
+                const maxTokens = (
+                    provider === "huggingface" || provider === "hf"
+                ) && intent === "skillgap"
+                    ? Number(process.env.HF_SKILLGAP_MAX_NEW_TOKENS || process.env.HF_MAX_NEW_TOKENS || 512)
+                    : undefined;
+
+                result = await aiService.generate(prompt, { provider, model: routedModel, maxTokens });
             } catch (primaryError) {
                 // Retry once with a compact prompt to avoid token/latency spikes on long chat histories.
                 const compactRetryPrompt = [
@@ -204,7 +209,13 @@ exports.askAI = async (req, res) => {
                     `PLAN: ${buildPlanContext(existingPlan)}`,
                     `QUESTION: ${question}`
                 ].join('\n');
-                result = await aiService.generate(compactRetryPrompt, { provider, model: routedModel });
+                const maxTokens = (
+                    provider === "huggingface" || provider === "hf"
+                ) && intent === "skillgap"
+                    ? Number(process.env.HF_SKILLGAP_MAX_NEW_TOKENS || process.env.HF_MAX_NEW_TOKENS || 512)
+                    : undefined;
+
+                result = await aiService.generate(compactRetryPrompt, { provider, model: routedModel, maxTokens });
             }
             endAiCall();
             const answer = result && result.text ? result.text : String(result);
@@ -281,8 +292,7 @@ exports.askAI = async (req, res) => {
 exports.streamChat = async (req, res) => {
     const message = req.body.message || req.query.message;
     const preferredProvider = (req.body.provider || req.query.provider || '').toLowerCase();
-    const { provider: routedProvider, model: routedModel, intent } = getProvider(message || "");
-    const provider = preferredProvider || routedProvider;
+    const { provider, model: routedModel, intent } = getProvider(message || "", preferredProvider);
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -353,11 +363,11 @@ exports.generateCareerPlan = async (req, res) => {
             }
         `;
 
-        const roadmapModel = process.env.DEEPSEEK_HEAVY_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-ai/DeepSeek-R1';
-        console.log(`[ROUTER] intent: roadmap -> provider: deepseek -> model: ${roadmapModel}`);
+        const roadmapModel = process.env.GROQ_ROADMAP_MODEL || process.env.GROQ_HEAVY_MODEL || process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+        console.log(`[ROUTER] intent: roadmap -> provider: groq -> model: ${roadmapModel}`);
         const endAiCall = timer('career_plan_ai_call');
         const result = await aiService.generate(prompt, {
-            provider: 'deepseek',
+            provider: 'groq',
             model: roadmapModel
         });
         endAiCall();
@@ -421,4 +431,3 @@ exports.getHistory = async (req, res) => {
         });
     }
 };
-

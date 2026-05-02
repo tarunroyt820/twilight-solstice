@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
+const connectDB = require('./config/db');
 
 const { clean } = require('xss-clean/lib/xss');
 const rateLimit = require('express-rate-limit');
@@ -22,6 +23,10 @@ const sessionsRoutes = require('./routes/sessionsRoutes');
 const disputesRoutes = require('./routes/disputesRoutes');
 const reviewsRoutes = require('./routes/reviewsRoutes');
 const notificationsRoutes = require('./routes/notificationsRoutes');
+const discoveryRoutes = require('./routes/discoveryRoutes');
+const agreementMessageRoutes = require('./routes/agreementMessageRoutes');
+const adminAnalyticsRoutes = require('./routes/adminAnalyticsRoutes');
+const pushSubscriptionRoutes = require('./routes/pushSubscriptionRoutes');
 
 const app = express();
 
@@ -61,11 +66,11 @@ const xssProtectionMiddleware = (req, res, next) => {
     next();
 };
 
-const selectedProvider = (process.env.AI_PROVIDER || 'deepseek').toLowerCase();
-const hasProviderKey = selectedProvider === 'deepseek'
-    ? Boolean(process.env.HUGGINGFACE_API_KEY || process.env.HF_API_TOKEN)
-    : selectedProvider === 'groq'
-        ? Boolean(process.env.GROQ_API_KEY)
+const selectedProvider = (process.env.AI_PROVIDER || 'groq').toLowerCase();
+const hasProviderKey = selectedProvider === 'groq'
+    ? Boolean(process.env.GROQ_API_KEY)
+    : (selectedProvider === 'huggingface' || selectedProvider === 'hf')
+        ? Boolean(process.env.HUGGINGFACE_API_KEY || process.env.HF_API_TOKEN)
         : false;
 
 if (!process.env.JWT_SECRET || !hasProviderKey) {
@@ -121,8 +126,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Rate Limiter
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,
-    message: 'Too many requests, please try again later.'
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.path === '/auth/refresh',
+    message: 'Too many requests, please slow down and try again shortly.'
 });
 app.use('/api/', limiter);
 
@@ -144,6 +152,21 @@ app.use('/api/auth/', (req, res, next) => {
     return authLimiter(req, res, next);
 });
 
+app.use('/api', (req, res, next) => {
+    if (req.path === '/auth/refresh') {
+        return next();
+    }
+
+    if (connectDB.isDatabaseConnected()) {
+        return next();
+    }
+
+    connectDB().catch(() => {});
+    return res.status(503).json({
+        message: 'Database is reconnecting. Please try again in a moment.'
+    });
+});
+
 // Health Check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
@@ -154,17 +177,21 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/ai', aiRoutes);
-app.use('/api/career-plan', careerPlanRoutes);
+app.use('/api/career-plans', careerPlanRoutes);
 app.use('/api/resume', resumeRoutes);
 app.use('/api/skills', skillsRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/matches', matchesRoutes);
 app.use('/api/requests', requestsRoutes);
 app.use('/api/agreements', agreementsRoutes);
+app.use('/api/agreements', agreementMessageRoutes);
 app.use('/api/sessions', sessionsRoutes);
 app.use('/api/disputes', disputesRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/discovery', discoveryRoutes);
+app.use('/api/admin/analytics', adminAnalyticsRoutes);
+app.use('/api/push-subscriptions', pushSubscriptionRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

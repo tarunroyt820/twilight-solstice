@@ -43,6 +43,10 @@ const AgreementSchema = new mongoose.Schema(
         completedAt: {
             type: Date,
             default: null
+        },
+        reviewReminderSent: {
+            type: Boolean,
+            default: false
         }
     },
     { timestamps: { createdAt: true, updatedAt: true } }
@@ -50,5 +54,6 @@ const AgreementSchema = new mongoose.Schema(
 
 AgreementSchema.index({ participants: 1 });
 AgreementSchema.index({ status: 1 });
+AgreementSchema.index({ status: 1, reviewReminderSent: 1, completedAt: 1 });
 
 module.exports = mongoose.model('Agreement', AgreementSchema);

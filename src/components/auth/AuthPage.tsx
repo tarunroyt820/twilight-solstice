@@ -54,6 +54,8 @@ export function AuthPage({ mode }: AuthPageProps) {
 
       if (!error.response && !error.message?.includes("Token")) {
         toast.error("Network or CORS error: check that the backend is running and the frontend URL is allowed.");
+      } else if (statusCode === 503) {
+        toast.error("The backend is online, but the database is still reconnecting. Try again in a moment.");
       } else if (statusCode === 429) {
         toast.error("Too many attempts. Please wait a few minutes, then try again.");
       } else if (errorMessage.includes("User already exists")) {

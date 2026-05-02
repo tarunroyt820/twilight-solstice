@@ -1,17 +1,32 @@
-const PROVIDER_POLICY = {
-    chat: 'deepseek',
-    roadmap: 'deepseek',
-    skillgap: 'deepseek',
-    resume: 'deepseek',
-    reasoning: 'deepseek'
-};
+const SUPPORTED_PROVIDERS = new Set(["groq", "huggingface", "hf"]);
 
-const MODEL_POLICY = {
-    chat: process.env.DEEPSEEK_CHAT_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-ai/DeepSeek-R1',
-    roadmap: process.env.DEEPSEEK_HEAVY_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-ai/DeepSeek-R1',
-    skillgap: process.env.DEEPSEEK_HEAVY_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-ai/DeepSeek-R1',
-    resume: process.env.DEEPSEEK_HEAVY_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-ai/DeepSeek-R1',
-    reasoning: process.env.DEEPSEEK_HEAVY_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-ai/DeepSeek-R1'
+const DEFAULT_PROVIDER = (() => {
+    const value = String(process.env.AI_PROVIDER || "groq").toLowerCase().trim();
+    return SUPPORTED_PROVIDERS.has(value) ? value : "groq";
+})();
+
+const MODEL_POLICY_BY_PROVIDER = {
+    groq: {
+        chat: process.env.GROQ_CHAT_MODEL || process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+        roadmap: process.env.GROQ_ROADMAP_MODEL || process.env.GROQ_HEAVY_MODEL || process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+        skillgap: process.env.GROQ_SKILLGAP_MODEL || process.env.GROQ_HEAVY_MODEL || process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+        resume: process.env.GROQ_RESUME_MODEL || process.env.GROQ_HEAVY_MODEL || process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+        reasoning: process.env.GROQ_REASONING_MODEL || process.env.GROQ_HEAVY_MODEL || process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+    },
+    huggingface: {
+        chat: process.env.HF_CHAT_MODEL || process.env.HF_MODEL || "",
+        roadmap: process.env.HF_HEAVY_MODEL || process.env.HF_MODEL || "",
+        skillgap: process.env.HF_SKILLGAP_MODEL || process.env.HF_HEAVY_MODEL || process.env.HF_MODEL || "",
+        resume: process.env.HF_HEAVY_MODEL || process.env.HF_MODEL || "",
+        reasoning: process.env.HF_HEAVY_MODEL || process.env.HF_MODEL || "",
+    },
+    hf: {
+        chat: process.env.HF_CHAT_MODEL || process.env.HF_MODEL || "",
+        roadmap: process.env.HF_HEAVY_MODEL || process.env.HF_MODEL || "",
+        skillgap: process.env.HF_SKILLGAP_MODEL || process.env.HF_HEAVY_MODEL || process.env.HF_MODEL || "",
+        resume: process.env.HF_HEAVY_MODEL || process.env.HF_MODEL || "",
+        reasoning: process.env.HF_HEAVY_MODEL || process.env.HF_MODEL || "",
+    },
 };
 
 const classifyIntent = (message = '') => {
@@ -24,12 +39,16 @@ const classifyIntent = (message = '') => {
 };
 
 module.exports = {
-    getProvider: (message) => {
+    getProvider: (message, preferredProvider) => {
         const intent = classifyIntent(message);
+        const preferred = String(preferredProvider || "").toLowerCase().trim();
+        const provider = SUPPORTED_PROVIDERS.has(preferred) ? preferred : DEFAULT_PROVIDER;
+        const modelPolicy = MODEL_POLICY_BY_PROVIDER[provider] || MODEL_POLICY_BY_PROVIDER[DEFAULT_PROVIDER] || MODEL_POLICY_BY_PROVIDER.groq;
+
         return {
-            provider: PROVIDER_POLICY[intent],
-            model: MODEL_POLICY[intent],
+            provider,
+            model: modelPolicy[intent],
             intent
         };
-    }
+    },
 };

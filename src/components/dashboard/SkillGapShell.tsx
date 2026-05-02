@@ -33,8 +33,8 @@ export function SkillGapShell() {
       .then(([plan, profile]) => {
         setCareerPlan(plan);
         setUserProfile(profile);
-        if (plan.skillGapAnalysis?.length > 0) {
-          setAnalysis(plan.skillGapAnalysis.map((gap) => `- ${gap}`).join("\n"));
+        if ((plan?.skillGapAnalysis?.length ?? 0) > 0) {
+          setAnalysis((plan?.skillGapAnalysis ?? []).map((gap) => `- ${gap}`).join("\n"));
         }
       })
       .catch(async () => {
@@ -63,7 +63,7 @@ export function SkillGapShell() {
   const fetchSkillGapFromAI = async (role: string) => {
     const result = await askAI(
       `Perform a detailed skill gap analysis for me if I want to become a ${role}. Based on my current profile skills, tell me: 1) Skills I already have that are relevant, 2) Skills I am missing, 3) A prioritised learning plan with estimated timeframes. Format clearly using markdown.`,
-      { provider: "deepseek" },
+      { provider: "huggingface" },
     );
 
     setAnalysis(result.answer);

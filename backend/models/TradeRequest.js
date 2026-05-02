@@ -51,6 +51,11 @@ const TradeRequestSchema = new mongoose.Schema(
             required: [true, 'Proposed duration is required'],
             min: [1, 'Proposed duration must be at least 1 minute']
         },
+        message: {
+            type: String,
+            trim: true,
+            default: ''
+        },
         status: {
             type: String,
             enum: ['pending', 'accepted', 'declined', 'countered', 'expired'],
@@ -62,6 +67,7 @@ const TradeRequestSchema = new mongoose.Schema(
         },
         expiresAt: {
             type: Date,
+            index: true,
             default: function defaultExpiry() {
                 return new Date(Date.now() + (48 * 60 * 60 * 1000));
             }
@@ -73,6 +79,5 @@ const TradeRequestSchema = new mongoose.Schema(
 TradeRequestSchema.index({ from: 1 });
 TradeRequestSchema.index({ to: 1 });
 TradeRequestSchema.index({ status: 1 });
-TradeRequestSchema.index({ expiresAt: 1 });
 
 module.exports = mongoose.model('TradeRequest', TradeRequestSchema);

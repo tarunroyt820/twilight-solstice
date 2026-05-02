@@ -17,7 +17,11 @@ const NotificationSchema = new mongoose.Schema(
                 'noshow_alert',
                 'dispute_filed',
                 'credits_awarded',
-                'exchange_completed'
+                'exchange_completed',
+                'milestone_due_soon',
+                'milestone_overdue',
+                'plan_ai_ready',
+                'recommendation_generated'
             ],
             required: [true, 'Notification type is required']
         },

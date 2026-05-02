@@ -1,3 +1,7 @@
+const SkillProfile = require('../models/SkillProfile');
+const User = require('../models/User');
+const Availability = require('../models/Availability');
+
 const timeToMinutes = (value) => {
     if (typeof value !== 'string') return null;
     const match = value.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
@@ -76,11 +80,67 @@ const calculateMatchScore = (user1, user2) => {
 
     return {
         score: Math.round(weightedScore * 100),
+        availabilityScore,
         reasons
     };
 };
 
+const filterByAvailabilityOverlap = async (currentUserId, profiles) => {
+    const currentAvailability = await Availability.findOne({ userId: currentUserId }).lean();
+    if (!currentAvailability) return profiles;
+
+    const results = [];
+    for (const profile of profiles || []) {
+        const otherUserId = profile?.userId?._id || profile?.userId;
+        if (!otherUserId) continue;
+
+        const otherAvailability = await Availability.findOne({ userId: otherUserId }).lean();
+        if (!otherAvailability) continue;
+
+        const overlap = computeAvailabilityOverlap(currentAvailability, otherAvailability);
+        if (overlap > 0) {
+            results.push(profile);
+        }
+    }
+
+    return results;
+};
+
+const computeMatchScore = async (currentUserId, otherUserId) => {
+    const [currentProfile, otherProfile, currentAvailability, otherAvailability, currentUser, otherUser] = await Promise.all([
+        SkillProfile.findOne({ userId: currentUserId }).lean(),
+        SkillProfile.findOne({ userId: otherUserId }).lean(),
+        Availability.findOne({ userId: currentUserId }).lean(),
+        Availability.findOne({ userId: otherUserId }).lean(),
+        User.findById(currentUserId).select('trustScore').lean(),
+        User.findById(otherUserId).select('trustScore').lean()
+    ]);
+
+    if (!currentProfile || !otherProfile) {
+        return { score: 0, reasons: ['Missing skill profile for one or both users'] };
+    }
+
+    return calculateMatchScore(
+        {
+            userId: currentUserId,
+            skillsOffered: currentProfile.skillsOffered || [],
+            skillsWanted: currentProfile.skillsWanted || [],
+            trustScore: currentUser?.trustScore ?? 100,
+            availability: currentAvailability || null
+        },
+        {
+            userId: otherUserId,
+            skillsOffered: otherProfile.skillsOffered || [],
+            skillsWanted: otherProfile.skillsWanted || [],
+            trustScore: otherUser?.trustScore ?? 100,
+            availability: otherAvailability || null
+        }
+    );
+};
+
 module.exports = {
     calculateMatchScore,
-    computeAvailabilityOverlap
+    computeAvailabilityOverlap,
+    filterByAvailabilityOverlap,
+    computeMatchScore
 };

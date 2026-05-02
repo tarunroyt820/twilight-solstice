@@ -1,15 +1,15 @@
 const { Readable } = require("stream");
-const deepseekService = require("./deepseek.service");
 const groqService = require("./groq.service");
+const huggingfaceService = require("./huggingface.service");
 
 let validateProviderConfig;
 try {
     ({ validateProviderConfig } = require("./aiConfig"));
 } catch (_error) {
     validateProviderConfig = (provider) => {
-        const resolved = (provider || process.env.AI_PROVIDER || "deepseek").toLowerCase();
+        const resolved = (provider || process.env.AI_PROVIDER || "groq").toLowerCase();
 
-        if (resolved !== "groq" && resolved !== "deepseek") {
+        if (resolved !== "groq" && resolved !== "huggingface" && resolved !== "hf") {
             return {
                 valid: false,
                 code: "AI_PROVIDER_UNSUPPORTED",
@@ -28,13 +28,22 @@ try {
             }
         }
 
-        if (resolved === "deepseek") {
-            const value = process.env.HUGGINGFACE_API_KEY || process.env.HF_API_TOKEN;
+        if (resolved === "huggingface" || resolved === "hf") {
+            const value = process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN || process.env.HF_API_TOKEN;
             if (!value || value.startsWith("REPLACE_")) {
                 return {
                     valid: false,
                     code: "AI_NOT_CONFIGURED",
-                    message: "HUGGINGFACE_API_KEY is missing for provider deepseek"
+                    message: "HUGGINGFACE_API_KEY is missing for provider huggingface"
+                };
+            }
+
+            const model = process.env.HF_MODEL || process.env.HF_CHAT_MODEL || process.env.HF_HEAVY_MODEL || process.env.HF_SKILLGAP_MODEL;
+            if (!model) {
+                return {
+                    valid: false,
+                    code: "AI_NOT_CONFIGURED",
+                    message: "HF_MODEL is missing for provider huggingface"
                 };
             }
         }
@@ -53,7 +62,7 @@ const withTimeout = (promise, ms, label) => {
 const AI_TIMEOUT_MS = Number(process.env.AI_TIMEOUT_MS || 60000);
 
 const callProvider = async (provider, message, options = {}) => {
-    const normalized = (provider || process.env.AI_PROVIDER || "deepseek").toLowerCase();
+    const normalized = (provider || process.env.AI_PROVIDER || "groq").toLowerCase();
     const validation = validateProviderConfig(normalized);
     if (!validation.valid) {
         const error = new Error(validation.message);
@@ -61,12 +70,12 @@ const callProvider = async (provider, message, options = {}) => {
         throw error;
     }
 
-    if (normalized === "deepseek") {
-        return deepseekService.generateResponse(message, options);
-    }
-
     if (normalized === "groq") {
         return groqService.generateResponse(message, options);
+    }
+
+    if (normalized === "huggingface" || normalized === "hf") {
+        return huggingfaceService.generateResponse(message, options);
     }
 
     const error = new Error(`Unsupported AI provider: ${normalized}`);
@@ -77,7 +86,7 @@ const callProvider = async (provider, message, options = {}) => {
 const normalizeOptions = (preferredProvider) => {
     if (!preferredProvider) {
         return {
-            provider: process.env.AI_PROVIDER || "deepseek",
+            provider: process.env.AI_PROVIDER || "groq",
             model: undefined,
         };
     }
@@ -90,14 +99,14 @@ const normalizeOptions = (preferredProvider) => {
     }
 
     return {
-        provider: preferredProvider.provider || process.env.AI_PROVIDER || "deepseek",
+        provider: preferredProvider.provider || process.env.AI_PROVIDER || "groq",
         model: preferredProvider.model,
     };
 };
 
 const generate = async (message, preferredProvider) => {
     const normalized = normalizeOptions(preferredProvider);
-    const provider = (normalized.provider || process.env.AI_PROVIDER || "deepseek").toLowerCase();
+    const provider = (normalized.provider || process.env.AI_PROVIDER || "groq").toLowerCase();
 
     try {
         console.log(`[AI SERVICE] Trying provider: ${provider}${normalized.model ? ` model: ${normalized.model}` : ""} (timeout: ${AI_TIMEOUT_MS}ms)`);
@@ -116,12 +125,12 @@ const generate = async (message, preferredProvider) => {
 
 const generateStream = async (message, preferredProvider) => {
     const normalized = normalizeOptions(preferredProvider);
-    const provider = (normalized.provider || process.env.AI_PROVIDER || "deepseek").toLowerCase();
+    const provider = (normalized.provider || process.env.AI_PROVIDER || "groq").toLowerCase();
 
-    if (provider === "deepseek" && typeof deepseekService.generateResponseStream === "function") {
+    if ((provider === "huggingface" || provider === "hf") && typeof huggingfaceService.generateResponseStream === "function") {
         try {
             console.log(`[AI SERVICE] Streaming with provider: ${provider}${normalized.model ? ` model: ${normalized.model}` : ""}`);
-            return await deepseekService.generateResponseStream(message, { model: normalized.model });
+            return await huggingfaceService.generateResponseStream(message, { model: normalized.model });
         } catch (err) {
             console.warn(`[AI SERVICE] ${provider} stream failed: ${err.message}`);
             const error = new Error(err.message || "AI provider stream failed");
@@ -145,6 +154,6 @@ const generateStream = async (message, preferredProvider) => {
     return Readable.from(chunkGenerator());
 };
 
-const getAIResponse = async (prompt) => generate(prompt, process.env.AI_PROVIDER || "deepseek");
+const getAIResponse = async (prompt) => generate(prompt, process.env.AI_PROVIDER || "groq");
 
 module.exports = { generate, generateStream, getAIResponse };

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
-  Bell,
   BookOpen,
   ChevronLeft,
   Compass,
@@ -19,6 +18,7 @@ import {
 
 import { Button } from "@/components/common/Button";
 import { Logo } from "@/components/common/Logo";
+import { NotificationBell } from "@/components/notifications";
 import { cn } from "@/lib/utils";
 import { logout } from "@/services/authApi";
 import { getProfile } from "@/services/profileApi";
@@ -291,29 +291,10 @@ export function Dashboard() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[rgba(22,160,133,0.08)] bg-[rgba(10,14,39,0.9)] px-6 backdrop-blur-xl lg:px-8">
           <div className="flex items-center gap-3">
-            {!isAssistantRoute && (
-              <button
-                onClick={() => setDesktopSidebarExpanded((current) => !current)}
-                className="hidden h-9 w-9 items-center justify-center rounded-[9px] bg-[rgba(22,160,133,0.08)] text-[rgba(255,255,255,0.5)] transition-colors hover:bg-[rgba(22,160,133,0.16)] hover:text-white lg:flex"
-                aria-label={desktopSidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
-                title={desktopSidebarExpanded ? "Close menu" : "Open menu"}
-              >
-                {desktopSidebarExpanded ? (
-                  <ChevronLeft className="h-[17px] w-[17px]" />
-                ) : (
-                  <Menu className="h-[17px] w-[17px]" />
-                )}
-              </button>
-            )}
-            {!isAssistantRoute && (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-[rgba(22,160,133,0.08)] text-[rgba(255,255,255,0.5)] transition-colors hover:bg-[rgba(22,160,133,0.16)] hover:text-white lg:hidden"
-              >
-                <Menu className="h-[17px] w-[17px]" />
-              </button>
-            )}
-            <div className="text-base font-bold text-white">{activeItem.label}</div>
+            <div className="flex flex-col">
+              <div className="text-base font-bold text-white">{activeItem.label}</div>
+              <div className="text-xs text-[rgba(255,255,255,0.4)]">Dashboard</div>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -326,10 +307,7 @@ export function Dashboard() {
                 className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[rgba(255,255,255,0.3)]"
               />
             </div>
-            <button className="relative flex h-9 w-9 items-center justify-center rounded-[9px] bg-[rgba(22,160,133,0.06)] text-[rgba(255,255,255,0.5)]">
-              <Bell className="h-[15px] w-[15px]" />
-              <span className="absolute right-2 top-2 h-[7px] w-[7px] rounded-full border-2 border-[#0A0E27] bg-[#ef4444]" />
-            </button>
+            <NotificationBell />
             <div className="hidden items-center gap-3 border-l border-[rgba(22,160,133,0.12)] pl-3 sm:flex">
               <div className="text-right">
                 <p className="text-[13px] font-semibold text-white">

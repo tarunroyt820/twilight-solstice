@@ -10,6 +10,13 @@ const Review = require('../models/Review');
 const Notification = require('../models/Notification');
 const matchingService = require('../services/matchingService');
 const penaltyService = require('../services/penaltyService');
+const {
+    buildTradeAgreement,
+    canAcceptTradeRequest,
+    computeTradeRequestExpiry,
+    normalizeTradeMessage,
+    validateTradeRequestDraft
+} = require('../services/tradeFlowService');
 const { updateTrustScore } = require('../services/trustScoreService');
 const { sendNotification, sendNotificationToMany } = require('../utils/notificationHelper');
 
@@ -50,6 +57,99 @@ const getAdminUserIds = () => {
         .split(',')
         .map((id) => id.trim())
         .filter((id) => mongoose.Types.ObjectId.isValid(id));
+};
+
+const addUniqueAchievement = (achievements, achievement) => {
+    if (!achievement) return;
+    if (!achievements.includes(achievement)) {
+        achievements.push(achievement);
+    }
+};
+
+const updateCompletionRewards = async (userId, completedAt = new Date()) => {
+    const user = await User.findById(userId).select('completionStreak lastCompletionDate achievements');
+    if (!user) return;
+
+    const now = completedAt instanceof Date ? completedAt : new Date(completedAt);
+    if (Number.isNaN(now.getTime())) return;
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+
+    const previousCompletion = user.lastCompletionDate ? new Date(user.lastCompletionDate) : null;
+    let completionStreak = Number(user.completionStreak || 0);
+
+    if (previousCompletion && !Number.isNaN(previousCompletion.getTime())) {
+        const previousDay = previousCompletion.toDateString();
+        const today = now.toDateString();
+        const yesterdayDay = yesterday.toDateString();
+
+        if (previousDay === today) {
+            completionStreak = Number(user.completionStreak || 0);
+        } else if (previousDay === yesterdayDay) {
+            completionStreak += 1;
+        } else {
+            completionStreak = 1;
+        }
+    } else {
+        completionStreak = 1;
+    }
+
+    const [completedAgreements, totalAgreements] = await Promise.all([
+        Agreement.countDocuments({ participants: userId, status: 'completed' }),
+        Agreement.countDocuments({ participants: userId })
+    ]);
+
+    const completionRate = totalAgreements > 0 ? completedAgreements / totalAgreements : 0;
+    const achievements = Array.isArray(user.achievements) ? [...user.achievements] : [];
+
+    if (completedAgreements === 5) addUniqueAchievement(achievements, '5 Exchanges Completed');
+    if (completedAgreements === 10) addUniqueAchievement(achievements, '10 Exchanges Completed');
+    if (completionRate >= 0.9 && completedAgreements >= 10) addUniqueAchievement(achievements, 'Reliable Mentor');
+    if (completionStreak >= 5) addUniqueAchievement(achievements, '5-Day Completion Streak');
+
+    await User.updateOne(
+        { _id: userId },
+        {
+            $set: {
+                completionStreak,
+                lastCompletionDate: now,
+                completionRate,
+                achievements: [...new Set(achievements)]
+            }
+        }
+    );
+};
+
+const updateResponseRewards = async (userId, tradeRequestCreatedAt) => {
+    const user = await User.findById(userId).select('responseStreak achievements');
+    if (!user) return;
+
+    const createdAt = tradeRequestCreatedAt instanceof Date ? tradeRequestCreatedAt : new Date(tradeRequestCreatedAt);
+    const respondedWithin24Hours = !Number.isNaN(createdAt.getTime())
+        ? (Date.now() - createdAt.getTime()) <= (24 * 60 * 60 * 1000)
+        : false;
+
+    let responseStreak = Number(user.responseStreak || 0);
+    if (respondedWithin24Hours) {
+        responseStreak += 1;
+    } else {
+        responseStreak = 0;
+    }
+
+    const achievements = Array.isArray(user.achievements) ? [...user.achievements] : [];
+    if (responseStreak >= 3) addUniqueAchievement(achievements, 'Fast Responder');
+    if (responseStreak >= 7) addUniqueAchievement(achievements, '7-Day Response Streak');
+
+    await User.updateOne(
+        { _id: userId },
+        {
+            $set: {
+                responseStreak,
+                achievements: [...new Set(achievements)]
+            }
+        }
+    );
 };
 
 exports.upsertSkillProfile = async (req, res) => {
@@ -206,6 +306,68 @@ exports.getMatches = async (req, res) => {
     }
 };
 
+// Universal search for skill-exchange: search by username or skill
+exports.searchExchangeUsers = async (req, res) => {
+    try {
+        const { q = '', type = 'all', page = 1, limit = 20 } = req.query;
+        const queryText = String(q || '').trim();
+        if (!queryText) return fail(res, 400, 'q (query) parameter is required');
+
+        const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+        const parsedLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+
+        const regex = new RegExp(queryText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+
+        let profiles = [];
+
+        if (type === 'name' || type === 'all') {
+            // find users by fullName and populate their skill profiles
+            const users = await User.find({ fullName: regex }).select('_id fullName').lean();
+            const userIds = users.map((u) => u._id);
+            if (userIds.length > 0) {
+                const found = await SkillProfile.find({ userId: { $in: userIds } })
+                    .populate('userId', 'fullName')
+                    .skip((parsedPage - 1) * parsedLimit)
+                    .limit(parsedLimit)
+                    .lean();
+                profiles = profiles.concat(found);
+            }
+        }
+
+        if (type === 'skill' || type === 'all') {
+            // search offered or wanted skills by name
+            const skillQuery = {
+                $or: [
+                    { 'skillsOffered.name': { $regex: regex } },
+                    { 'skillsWanted.name': { $regex: regex } }
+                ],
+                isActive: true
+            };
+            const foundBySkill = await SkillProfile.find(skillQuery)
+                .populate('userId', 'fullName')
+                .skip((parsedPage - 1) * parsedLimit)
+                .limit(parsedLimit)
+                .lean();
+
+            // merge avoiding duplicates by userId
+            const existingIds = new Set(profiles.map((p) => p.userId && p.userId._id ? p.userId._id.toString() : String(p.userId)));
+            for (const p of foundBySkill) {
+                const uid = p.userId && p.userId._id ? p.userId._id.toString() : String(p.userId);
+                if (!existingIds.has(uid)) {
+                    profiles.push(p);
+                    existingIds.add(uid);
+                }
+            }
+        }
+
+        // basic scoring: for now return profiles as-is and total count
+        const total = profiles.length;
+        res.json({ profiles, total, page: parsedPage });
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
 exports.createTradeRequest = async (req, res) => {
     try {
         const {
@@ -213,11 +375,20 @@ exports.createTradeRequest = async (req, res) => {
             offeredSkill,
             requestedSkill,
             proposedCredits,
-            proposedDuration
+            proposedDuration,
+            message = ''
         } = req.body;
 
-        if (!to || !offeredSkill || !requestedSkill || proposedCredits === undefined || proposedDuration === undefined) {
-            return fail(res, 400, 'Missing required trade request fields');
+        const validationError = validateTradeRequestDraft({
+            to,
+            offeredSkill,
+            requestedSkill,
+            proposedCredits,
+            proposedDuration
+        });
+
+        if (validationError) {
+            return fail(res, 400, validationError);
         }
 
         if (to.toString() === req.user.id.toString()) return fail(res, 400, 'Cannot send request to yourself');
@@ -242,6 +413,8 @@ exports.createTradeRequest = async (req, res) => {
         });
         if (duplicate) return fail(res, 409, 'Duplicate pending request exists');
 
+        const expiresAt = computeTradeRequestExpiry();
+
         const tradeRequest = await TradeRequest.create({
             from: req.user.id,
             to,
@@ -249,7 +422,9 @@ exports.createTradeRequest = async (req, res) => {
             requestedSkill,
             proposedCredits,
             proposedDuration,
-            status: 'pending'
+            status: 'pending',
+            message: normalizeTradeMessage(message),
+            expiresAt
         });
 
         await sendNotification(to, 'request_received', {
@@ -285,41 +460,59 @@ exports.acceptTradeRequest = async (req, res) => {
         const tradeRequest = await TradeRequest.findById(req.params.id);
         if (!tradeRequest) return fail(res, 404, 'Trade request not found');
         if (tradeRequest.to.toString() !== req.user.id.toString()) return fail(res, 403, 'Not allowed to accept this request');
-        const receiver = await User.findById(req.user.id).select('blockedUsers');
+
+        // fetch sender and receiver details and perform basic checks
+        const [receiver, sender] = await Promise.all([
+            User.findById(req.user.id).select('blockedUsers activeExchangeCount'),
+            User.findById(tradeRequest.from).select('activeExchangeCount')
+        ]);
+
         if (!receiver) return fail(res, 404, 'Receiver not found');
+        if (!sender) return fail(res, 404, 'Sender not found');
         if (receiver.blockedUsers.some((blocked) => blocked.toString() === tradeRequest.from.toString())) {
             return fail(res, 403, 'Blocked sender cannot be accepted');
         }
-        if (tradeRequest.status !== 'pending') return fail(res, 400, 'Request is not pending');
-        if (tradeRequest.expiresAt && tradeRequest.expiresAt < new Date()) {
-            tradeRequest.status = 'expired';
-            await tradeRequest.save();
-            return fail(res, 400, 'Request has expired');
+
+        const acceptanceCheck = canAcceptTradeRequest({ tradeRequest, sender, receiver });
+        if (!acceptanceCheck.ok) {
+            if (acceptanceCheck.expired) {
+                tradeRequest.status = 'expired';
+                await tradeRequest.save();
+            }
+            return fail(res, acceptanceCheck.statusCode, acceptanceCheck.message);
         }
 
-        tradeRequest.status = 'accepted';
-        await tradeRequest.save();
+        // Use a transaction to avoid partial state if supported
+        let agreement;
+        const session = await mongoose.startSession();
+        try {
+            await session.withTransaction(async () => {
+                tradeRequest.status = 'accepted';
+                await tradeRequest.save({ session });
 
-        const agreement = await Agreement.create({
-            requestId: tradeRequest._id,
-            participants: [tradeRequest.from, tradeRequest.to],
-            skill: `${tradeRequest.offeredSkill} <-> ${tradeRequest.requestedSkill}`,
-            duration: tradeRequest.proposedDuration,
-            credits: tradeRequest.proposedCredits,
-            status: 'active'
-        });
+                agreement = await Agreement.create([buildTradeAgreement(tradeRequest)], { session });
 
-        await User.updateMany(
-            { _id: { $in: [tradeRequest.from, tradeRequest.to] } },
-            { $inc: { activeExchangeCount: 1 } }
-        );
+                await User.updateMany(
+                    { _id: { $in: [tradeRequest.from, tradeRequest.to] } },
+                    { $inc: { activeExchangeCount: 1 } },
+                    { session }
+                );
+            });
+        } finally {
+            session.endSession();
+        }
 
+        // updateResponseRewards is safe to run after transaction commit
+        await updateResponseRewards(req.user.id, tradeRequest.createdAt);
+
+        // send notification for acceptance
+        const agreementId = Array.isArray(agreement) ? agreement[0]._id : agreement._id;
         await sendNotification(tradeRequest.from, 'request_accepted', {
-            relatedId: agreement._id,
+            relatedId: agreementId,
             message: 'Your trade request was accepted'
         });
 
-        res.json({ request: tradeRequest, agreement });
+        res.json({ request: tradeRequest, agreement: Array.isArray(agreement) ? agreement[0] : agreement });
     } catch (error) {
         handleError(res, error);
     }
@@ -334,6 +527,7 @@ exports.declineTradeRequest = async (req, res) => {
 
         tradeRequest.status = 'declined';
         await tradeRequest.save();
+        await updateResponseRewards(req.user.id, tradeRequest.createdAt);
 
         await sendNotification(tradeRequest.from, 'request_declined', {
             relatedId: tradeRequest._id,
@@ -361,6 +555,7 @@ exports.counterTradeRequest = async (req, res) => {
         tradeRequest.status = 'countered';
         tradeRequest.counterOffer = { credits, duration, message };
         await tradeRequest.save();
+        await updateResponseRewards(req.user.id, tradeRequest.createdAt);
 
         res.json({ request: tradeRequest });
     } catch (error) {

@@ -2,13 +2,49 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const User = require('../models/User');
+const connectDB = require('../config/db');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/emailService');
 
 const buildVerificationCode = () => crypto.randomInt(100000, 1000000).toString();
 const buildResetToken = () => crypto.randomBytes(32).toString('hex');
 
+const ensureDatabaseReady = async (res) => {
+    if (connectDB.isDatabaseConnected()) {
+        return true;
+    }
+
+    try {
+        await connectDB();
+    } catch (error) {
+        // The connection error is logged in the DB bootstrapper.
+    }
+
+    if (connectDB.isDatabaseConnected()) {
+        return true;
+    }
+
+    res.status(503).json({
+        message: 'Database is reconnecting. Please try again in a moment.'
+    });
+    return false;
+};
+
+const respondWithAuthError = (res, error) => {
+    if (error?.name === 'MongooseError' || /buffering timed out/i.test(error?.message || '')) {
+        return res.status(503).json({
+            message: 'Database is reconnecting. Please try again in a moment.'
+        });
+    }
+
+    return res.status(500).json({ message: error.message });
+};
+
 exports.signup = async (req, res) => {
     try {
+        if (!(await ensureDatabaseReady(res))) {
+            return;
+        }
+
         const { fullName, email, password } = req.body;
         console.log(`Auth: Signup request for ${email}`);
 
@@ -54,12 +90,16 @@ exports.signup = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        respondWithAuthError(res, error);
     }
 };
 
 exports.login = async (req, res) => {
     try {
+        if (!(await ensureDatabaseReady(res))) {
+            return;
+        }
+
         const { email, password } = req.body;
 
         // Check for user
@@ -73,6 +113,9 @@ exports.login = async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
+
+        user.lastActiveAt = new Date();
+        await user.save();
 
         // Generate token
         const token = jwt.sign(
@@ -99,7 +142,7 @@ exports.login = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        respondWithAuthError(res, error);
     }
 };
 
@@ -134,6 +177,10 @@ exports.refreshToken = async (req, res) => {
 
 exports.verifyEmail = async (req, res) => {
     try {
+        if (!(await ensureDatabaseReady(res))) {
+            return;
+        }
+
         const { email, otp } = req.body.email ? req.body : req.query;
 
         if (!email || !otp) {
@@ -157,12 +204,16 @@ exports.verifyEmail = async (req, res) => {
 
         res.json({ message: 'Email verified successfully. You can now log in.' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        respondWithAuthError(res, error);
     }
 };
 
 exports.resendVerification = async (req, res) => {
     try {
+        if (!(await ensureDatabaseReady(res))) {
+            return;
+        }
+
         const { email } = req.body;
 
         if (!email) {
@@ -186,12 +237,16 @@ exports.resendVerification = async (req, res) => {
 
         res.json({ message: 'A new verification email has been sent.' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        respondWithAuthError(res, error);
     }
 };
 
 exports.requestPasswordReset = async (req, res) => {
     try {
+        if (!(await ensureDatabaseReady(res))) {
+            return;
+        }
+
         const { email } = req.body;
 
         if (!email) {
@@ -212,12 +267,16 @@ exports.requestPasswordReset = async (req, res) => {
             message: 'If that email exists, a password reset link has been sent.'
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        respondWithAuthError(res, error);
     }
 };
 
 exports.resetPassword = async (req, res) => {
     try {
+        if (!(await ensureDatabaseReady(res))) {
+            return;
+        }
+
         const { token, password } = req.body;
 
         if (!token || !password) {
@@ -241,6 +300,6 @@ exports.resetPassword = async (req, res) => {
 
         res.json({ message: 'Password reset successful. You can now log in.' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        respondWithAuthError(res, error);
     }
 };

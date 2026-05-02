@@ -76,6 +76,43 @@ const UserSchema = new mongoose.Schema({
         default: 100,
         min: [0, 'Trust score cannot be negative']
     },
+    qualityScore: {
+        type: Number,
+        default: 0,
+        index: true
+    },
+    completionRate: {
+        type: Number,
+        default: 0
+    },
+    responseRate: {
+        type: Number,
+        default: 1
+    },
+    activityScore: {
+        type: Number,
+        default: 0.2
+    },
+    riskFlags: {
+        type: [String],
+        default: []
+    },
+    achievements: {
+        type: [String],
+        default: []
+    },
+    completionStreak: {
+        type: Number,
+        default: 0
+    },
+    lastCompletionDate: {
+        type: Date,
+        default: null
+    },
+    responseStreak: {
+        type: Number,
+        default: 0
+    },
     activeExchangeCount: {
         type: Number,
         default: 0,
@@ -104,10 +141,16 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    lastActiveAt: {
+        type: Date,
+        default: Date.now
+    },
     createdAt: {
         type: Date,
         default: Date.now
     }
+}, {
+    bufferCommands: false
 });
 
 module.exports = mongoose.model('User', UserSchema);

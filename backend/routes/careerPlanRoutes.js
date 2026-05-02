@@ -1,36 +1,44 @@
 const express = require('express');
 const router = express.Router();
-const CareerPlan = require('../models/CareerPlan');
-const aiController = require('../controllers/aiController');
-const { protect } = require('../middleware/auth');
+const controller = require('../controllers/careerPlanController');
 
-router.post('/generate', protect, aiController.generateCareerPlan);
+// Ensure auth middleware has already attached req.user to request
+// These routes assume req.user is populated by a prior auth middleware
 
-router.get('/', protect, async (req, res) => {
-    try {
-        const plan = await CareerPlan.findOne({ userId: req.user.id });
-        if (!plan) return res.status(404).json({ message: 'No career plan found' });
-        res.json(plan);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch career plan' });
-    }
-});
+/**
+ * POST /api/career-plans
+ * Create a new career plan
+ */
+router.post('/', controller.createPlan);
 
-router.patch('/milestone/:index', protect, async (req, res) => {
-    try {
-        const plan = await CareerPlan.findOne({ userId: req.user.id });
-        if (!plan) return res.status(404).json({ message: 'No career plan found' });
-        if (!plan.milestones[req.params.index]) {
-            return res.status(404).json({ message: 'Milestone not found' });
-        }
+/**
+ * GET /api/career-plans
+ * List all plans for the authenticated user
+ */
+router.get('/', controller.listPlans);
 
-        plan.milestones[req.params.index].completed = req.body.completed;
-        plan.lastUpdated = new Date();
-        await plan.save();
-        res.json(plan);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to update milestone' });
-    }
-});
+/**
+ * GET /api/career-plans/:id
+ * Get a single plan by ID
+ */
+router.get('/:id', controller.getPlan);
+
+/**
+ * PATCH /api/career-plans/:id
+ * Update a plan (title, status, notes, etc)
+ */
+router.patch('/:id', controller.updatePlan);
+
+/**
+ * POST /api/career-plans/:id/complete-milestone
+ * Mark a milestone as complete
+ */
+router.post('/:id/complete-milestone', controller.completeMilestone);
+
+/**
+ * POST /api/career-plans/:id/refresh
+ * Refresh AI recommendations for the plan
+ */
+router.post('/:id/refresh', controller.refreshPlan);
 
 module.exports = router;
